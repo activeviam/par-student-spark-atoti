@@ -16,6 +16,8 @@ run `./mvnw compile`, or `./mvnw clean compile` if you want to clear any previou
 before rebuilding the project.<br>
 For windows users, use `mvnw.cmd` instead of `./mvnw`.
 
+To run tests, use `./mvnw test`.
+
 # Formatting
 
 Not to worry too much on different coding styles, this code base is formatted
