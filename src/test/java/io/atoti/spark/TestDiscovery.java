@@ -25,6 +25,7 @@ public class TestDiscovery {
     final ClassLoader cl = Thread.currentThread().getContextClassLoader();
     final URL url = Objects.requireNonNull(cl.getResource("csv/basic.csv"), "Cannot find file");
     final URL urlTwoTypesInSameColumn = Objects.requireNonNull(cl.getResource("csv/twoTypesInSameColumn.csv"), "Cannot find file");
+    final URL urlToJoin = Objects.requireNonNull(cl.getResource("csv/toJoin.csv"), "Cannot find file");
 
     System.out.println(url.toURI().getPath());
 	final Dataset<Row> dataframe = spark.read()
@@ -61,5 +62,29 @@ public class TestDiscovery {
     assertThat(dataframeTwoTypesInSameColumn.dtypes()).contains(new Tuple2<>("label", DataTypes.StringType.toString()));
     assertThat(dataframeTwoTypesInSameColumn.dtypes()).contains(new Tuple2<>("value", DataTypes.StringType.toString()));
     assertThat(dataframeTwoTypesInSameColumn.dtypes()).contains(new Tuple2<>("date", DataTypes.StringType.toString()));
+
+    final Dataset<Row> dataframeToJoin = spark.read()
+          .format("csv")
+          .option("sep", ";")
+          .option("header", true)
+          .option("timestampFormat", "dd/MM/yyyy")
+          .option("inferSchema", true)
+          .load(urlToJoin.toURI().getPath());
+    final Dataset<Row> dataframeJoin = dataframe.join(
+          dataframeToJoin,
+          dataframeToJoin.col("basic_id").equalTo(dataframe.col("id")),
+          "inner"
+    );
+
+    Discovery.discoverDataframe(dataframeJoin);
+
+    assertThat(dataframeJoin).isNotNull();
+    assertThat(dataframeJoin.dtypes()).contains(new Tuple2<>("id", DataTypes.IntegerType.toString()));
+    assertThat(dataframeJoin.dtypes()).contains(new Tuple2<>("label", DataTypes.StringType.toString()));
+    assertThat(dataframeJoin.dtypes()).contains(new Tuple2<>("value", DataTypes.DoubleType.toString()));
+    assertThat(dataframeJoin.dtypes()).contains(new Tuple2<>("date", DataTypes.TimestampType.toString()));
+    assertThat(dataframeJoin.dtypes()).contains(new Tuple2<>("join_id", DataTypes.IntegerType.toString()));
+    assertThat(dataframeJoin.dtypes()).contains(new Tuple2<>("join_value", DataTypes.DoubleType.toString()));
+    assertThat(dataframeJoin.dtypes()).contains(new Tuple2<>("join_date", DataTypes.TimestampType.toString()));
   }
 }
