@@ -1,5 +1,6 @@
 package io.atoti.spark;
 
+import io.atoti.spark.condition.QueryCondition;
 import java.util.List;
 
 public class ListQuery {
@@ -12,6 +13,10 @@ public class ListQuery {
 	 * @return list of rows extracted from the DataFrame
 	 */
 	public static List<Object> list(Object dataframe, List<String> wantedColumns, int limit, int offset) {
+		throw new UnsupportedOperationException("TODO");
+	}
+
+	public static List<Object> list(Object dataframe, QueryCondition condition) {
 		throw new UnsupportedOperationException("TODO");
 	}
 
