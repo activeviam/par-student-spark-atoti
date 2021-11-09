@@ -13,6 +13,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.junit.jupiter.api.Test;
+import scala.Tuple2;
 
 
 public class TestDiscovery {
@@ -23,6 +24,7 @@ public class TestDiscovery {
   void testDiscovery() throws URISyntaxException {
     final ClassLoader cl = Thread.currentThread().getContextClassLoader();
     final URL url = Objects.requireNonNull(cl.getResource("csv/basic.csv"), "Cannot find file");
+    final URL urlTwoTypesInSameColumn = Objects.requireNonNull(cl.getResource("csv/twoTypesInSameColumn.csv"), "Cannot find file");
 
     System.out.println(url.toURI().getPath());
 	final Dataset<Row> dataframe = spark.read()
@@ -43,5 +45,21 @@ public class TestDiscovery {
     assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType.toString());
     assertTrue(dTypes.containsKey("value"));
     assertThat(dTypes.get("value")).isEqualTo(DataTypes.DoubleType.toString());
+
+    final Dataset<Row> dataframeTwoTypesInSameColumn = spark.read()
+          .format("csv")
+          .option("sep", ";")
+          .option("header", true)
+          .option("timestampFormat", "dd/MM/yyyy")
+          .option("inferSchema", true)
+          .load(urlTwoTypesInSameColumn.toURI().getPath());
+
+    Discovery.discoverDataframe(dataframeTwoTypesInSameColumn);
+
+    assertThat(dataframeTwoTypesInSameColumn).isNotNull();
+    assertThat(dataframeTwoTypesInSameColumn.dtypes()).contains(new Tuple2<>("id", DataTypes.IntegerType.toString()));
+    assertThat(dataframeTwoTypesInSameColumn.dtypes()).contains(new Tuple2<>("label", DataTypes.StringType.toString()));
+    assertThat(dataframeTwoTypesInSameColumn.dtypes()).contains(new Tuple2<>("value", DataTypes.StringType.toString()));
+    assertThat(dataframeTwoTypesInSameColumn.dtypes()).contains(new Tuple2<>("date", DataTypes.StringType.toString()));
   }
 }
