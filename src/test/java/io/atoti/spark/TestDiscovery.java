@@ -1,30 +1,38 @@
 package io.atoti.spark;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.net.URISyntaxException;
-import java.nio.file.Path;
+import java.net.URL;
 import java.util.Objects;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
 
 public class TestDiscovery {
 
+  SparkSession spark =
+      SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+
   @Test
   void testDiscovery() throws URISyntaxException {
     final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    final var url = Objects.requireNonNull(cl.getResource("csv/basic.csv"), "Cannot find file");
-    final var path = Path.of(url.toURI());
+    final URL url = Objects.requireNonNull(cl.getResource("csv/basic.csv"), "Cannot find file");
 
-    if (true) {
-      throw new UnsupportedOperationException("Load the path as as dataframe and ");
-    }
-    final Object dataframe = null; // convert path to dataframe
-    Discovery.discoverDataframe(dataframe);
+    System.out.println(url);
 
-    assertThat(dataframe).isNotNull();
-    // TODO: add more assertions about the discovered values in the dataframe
-    // we should see 3 columns: id, label and value
-    // we should see that id is a number, label is something string-y and value is a number, ideally
-    // floating.
+    System.out.println(url.toURI().getPath());
+    final Dataset<Row> dataframe =
+        spark
+            .read()
+            .format("csv")
+            .option("sep", ";")
+            .option("header", true)
+            .option("dateFormat", "dd/MM/yyyy")
+            .option("inferSchema", true)
+            .load(url.toURI().getPath());
+    //    Discovery.discoverDataframe(dataframe);
+
+    dataframe.show();
+    dataframe.printSchema();
   }
 }

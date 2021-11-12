@@ -10,7 +10,7 @@
   <name>Spark + Atoti student project</name>
 
   <properties>
-    <java.version>17</java.version>
+    <java.version>16</java.version>
     <junit.version>5.8.1</junit.version>
   </properties>
 
@@ -25,6 +25,11 @@
       <artifactId>assertj-core</artifactId>
       <version>3.21.0</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql_2.13</artifactId>
+      <version>3.2.0</version>
     </dependency>
   </dependencies>
 
@@ -44,6 +49,9 @@
             <compileSourceRoots>
               <compileSourceRoot>${project.basedir}/src/main/java</compileSourceRoot>
             </compileSourceRoots>
+            <compilerArgs>
+              <arg>--enable-preview</arg>
+            </compilerArgs>
           </configuration>
         </plugin>
         <plugin>
@@ -84,6 +92,9 @@
             <version>${junit.version}</version>
           </dependency>
         </dependencies>
+        <configuration>
+          <argLine>--enable-preview --illegal-access=permit</argLine>
+        </configuration>
       </plugin>
     </plugins>
   </build>
