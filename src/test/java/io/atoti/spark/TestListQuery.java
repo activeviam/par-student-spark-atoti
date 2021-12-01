@@ -8,20 +8,37 @@ import io.atoti.spark.condition.NotCondition;
 import io.atoti.spark.condition.NullCondition;
 import io.atoti.spark.condition.OrCondition;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
 
 public class TestListQuery {
 
+  SparkSession spark =
+          SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+
   @Test
-  void testListAllDataFrame() {
-    final Object dataframe = null; // from basic.csv
-    final var rows = ListQuery.list(dataframe, List.of("id", "value"), -1, 0);
+  void testListAllDataFrame() throws URISyntaxException {
+    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+    final URL url = Objects.requireNonNull(cl.getResource("csv/basic.csv"), "Cannot find file");
+    final Dataset<Row> dataframe = spark
+                    .read()
+                    .format("csv")
+                    .option("sep", ";")
+                    .option("header", true)
+                    .option("dateFormat", "dd/MM/yyyy")
+                    .option("inferSchema", true)
+                    .load(url.toURI().getPath());
+    final List<Row> rows = ListQuery.list(dataframe, List.of("id", "value"), -1, 0);
     assertThat(rows).hasSize(3);
     final var valuesById =
         rows.stream()
@@ -33,8 +50,17 @@ public class TestListQuery {
   }
 
   @Test
-  void testListFirstRows() {
-    final Object dataframe = null; // from basic.csv
+  void testListFirstRows() throws URISyntaxException {
+    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+    final URL url = Objects.requireNonNull(cl.getResource("csv/basic.csv"), "Cannot find file");
+    final Dataset<Row> dataframe = spark
+            .read()
+            .format("csv")
+            .option("sep", ";")
+            .option("header", true)
+            .option("dateFormat", "dd/MM/yyyy")
+            .option("inferSchema", true)
+            .load(url.toURI().getPath());
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 2, 0);
     assertThat(rows).hasSize(2);
     final var valuesById =
@@ -47,8 +73,17 @@ public class TestListQuery {
   }
 
   @Test
-  void testListLastRow() {
-    final Object dataframe = null; // from basic.csv
+  void testListLastRow() throws URISyntaxException {
+    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+    final URL url = Objects.requireNonNull(cl.getResource("csv/basic.csv"), "Cannot find file");
+    final Dataset<Row> dataframe = spark
+            .read()
+            .format("csv")
+            .option("sep", ";")
+            .option("header", true)
+            .option("dateFormat", "dd/MM/yyyy")
+            .option("inferSchema", true)
+            .load(url.toURI().getPath());
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 1, 2);
     assertThat(rows).hasSize(1);
     final var valuesById =
@@ -57,7 +92,7 @@ public class TestListQuery {
                 Collectors.toUnmodifiableMap(
                     row -> ((Number) readRowValue(row, "id")).longValue(),
                     row -> ((Number) readRowValue(row, "value")).doubleValue()));
-    assertThat(valuesById).containsExactlyEntriesOf(Map.of(3L, 13.57d));
+    assertThat(valuesById).containsExactlyEntriesOf(Map.of(3L, -420d));
   }
 
   @Test
@@ -80,11 +115,11 @@ public class TestListQuery {
     assertThat(rows).hasSize(1).extracting(rowReader("id")).isEqualTo(2L);
   }
 
-  static Object readRowValue(final Object row, final String column) {
-    throw new UnsupportedOperationException("TODO");
+  static Object readRowValue(final Row row, final String column) {
+    return row.getAs(column);
   }
 
   static <T> Function<Object, T> rowReader(final String column) {
-    return row -> (T) readRowValue(row, column);
+    return row -> (T) readRowValue((Row) row, column);
   }
 }
