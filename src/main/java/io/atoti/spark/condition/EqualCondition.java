@@ -7,7 +7,7 @@ public record EqualCondition(String column, Object value) implements QueryCondit
 
 	@Override
 	public FilterFunction<Row> getCondition() {
-		return null;
+		return (Row row) -> row.getAs(this.column) == this.value;
 	}
 
 }

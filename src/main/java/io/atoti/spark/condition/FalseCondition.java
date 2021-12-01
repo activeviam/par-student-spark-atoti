@@ -17,8 +17,7 @@ public record FalseCondition() implements QueryCondition {
 
 	@Override
 	public FilterFunction<Row> getCondition() {
-		// TODO Auto-generated method stub
-		return null;
+		return (Row row) -> false;
 	}
 
 }

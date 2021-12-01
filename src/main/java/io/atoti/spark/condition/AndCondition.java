@@ -19,8 +19,16 @@ public record AndCondition(List<QueryCondition> conditions) implements QueryCond
 
 	@Override
 	public FilterFunction<Row> getCondition() {
-		// TODO Auto-generated method stub
-		return null;
+		return (Row row) -> this.conditions.stream()
+				.map(QueryCondition::getCondition)
+				.map((filterFunction) -> {
+					try {
+						return filterFunction.call(row);
+					} catch (Exception e) {
+						e.printStackTrace();
+						return false;
+					}
+				})
+				.reduce(true, (a, b) -> a && b);
 	}
-
 }

@@ -7,6 +7,5 @@ public record NotCondition(QueryCondition condition) implements QueryCondition {
 
 	@Override
 	public FilterFunction<Row> getCondition() {
-		// TODO Auto-generated method stub
-		return null;
+		return (Row row) -> !this.condition.getCondition().call(row);
 	} }
