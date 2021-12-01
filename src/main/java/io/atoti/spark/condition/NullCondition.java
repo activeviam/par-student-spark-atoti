@@ -7,6 +7,5 @@ public record NullCondition(String fieldName) implements QueryCondition {
 
 	@Override
 	public FilterFunction<Row> getCondition() {
-		// TODO Auto-generated method stub
-		return null;
+		return (Row row) -> (row.isNullAt(row.fieldIndex(fieldName)));
 	} }
