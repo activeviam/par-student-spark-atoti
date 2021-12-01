@@ -68,8 +68,9 @@ public class TestListQuery {
   @Test
   void testListWithCondition() throws URISyntaxException {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
-    final var rows = ListQuery.list(dataframe, new EqualCondition("id", 3L));
-    assertThat(rows).hasSize(1).extracting(rowReader("value")).isEqualTo(-420d);
+    final var rows = ListQuery.list(dataframe, new EqualCondition("id", 3));
+    System.out.println(rows);
+    assertThat(rows).hasSize(1).extracting(rowReader("value")).first().isEqualTo(-420d);
   }
 
   @Test
@@ -81,8 +82,8 @@ public class TestListQuery {
             AndCondition.of(
                 new EqualCondition("label", "a"),
                 new NotCondition(
-                    OrCondition.of(new EqualCondition("id", 1L), new NullCondition("value")))));
-    assertThat(rows).hasSize(1).extracting(rowReader("id")).isEqualTo(2L);
+                    OrCondition.of(new EqualCondition("id", 1), new NullCondition("value")))));
+    assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(2);
   }
 
   static Object readRowValue(final Row row, final String column) {

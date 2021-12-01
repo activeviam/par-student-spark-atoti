@@ -19,16 +19,17 @@ public record OrCondition(List<QueryCondition> conditions) implements QueryCondi
 
 	@Override
 	public FilterFunction<Row> getCondition() {
-		return ((Row row) -> {
-				return this.conditions.stream().reduce(false, (prev, condition) -> {
+		return (Row row) -> this.conditions.stream()
+				.map(QueryCondition::getCondition)
+				.map((filterFunction) -> {
 					try {
-						return (condition.getCondition().call(row)) || prev;
+						return filterFunction.call(row);
 					} catch (Exception e) {
+						e.printStackTrace();
 						return false;
 					}
-				} , null);
-			}
-		);
+				})
+				.reduce(false, (a, b) -> a || b);
 	}
 
 }
