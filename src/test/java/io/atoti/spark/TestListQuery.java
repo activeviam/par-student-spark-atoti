@@ -23,6 +23,10 @@ public class TestListQuery {
   SparkSession spark =
           SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
 
+  public TestListQuery() {
+	  this.spark.sparkContext().setLogLevel("ERROR");
+  }
+  
   @Test
   void testListAllDataFrame() throws URISyntaxException {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
