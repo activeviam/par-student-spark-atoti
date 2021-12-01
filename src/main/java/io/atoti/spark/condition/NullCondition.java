@@ -1,3 +1,3 @@
 package io.atoti.spark.condition;
 
-public record NullCondition(String fieldName) implements QueryCondition { }
+public record NullCondition(String fieldName) implements QueryCondition {}

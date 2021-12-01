@@ -8,8 +8,7 @@ package io.atoti.spark.condition;
 
 public record FalseCondition() implements QueryCondition {
 
-	public static FalseCondition value() {
-		return new FalseCondition();
-	}
-
+  public static FalseCondition value() {
+    return new FalseCondition();
+  }
 }

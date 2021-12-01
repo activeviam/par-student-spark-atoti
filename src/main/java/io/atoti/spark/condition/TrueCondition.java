@@ -8,8 +8,7 @@ package io.atoti.spark.condition;
 
 public record TrueCondition() implements QueryCondition {
 
-	public static TrueCondition value() {
-		return new TrueCondition();
-	}
-
+  public static TrueCondition value() {
+    return new TrueCondition();
+  }
 }
