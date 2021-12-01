@@ -29,7 +29,7 @@ public class ListQuery {
 	}
 
 	public static List<Row> list(Dataset<Row> dataframe, QueryCondition condition) {
-		return dataframe.filter(condition.getCondition(dataframe)).collectAsList();
+		return dataframe.filter(condition.getCondition()).collectAsList();
 	}
 
 }
