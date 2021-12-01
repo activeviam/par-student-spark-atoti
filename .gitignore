@@ -23,6 +23,7 @@
 hs_err_pid*
 /target/
 
+/.idea/
 .vscode
 .classpath
 .project
