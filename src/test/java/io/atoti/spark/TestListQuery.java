@@ -8,11 +8,8 @@ import io.atoti.spark.condition.NotCondition;
 import io.atoti.spark.condition.NullCondition;
 import io.atoti.spark.condition.OrCondition;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,7 +25,7 @@ public class TestListQuery {
 
   @Test
   void testListAllDataFrame() throws URISyntaxException {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark)
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final List<Row> rows = ListQuery.list(dataframe, List.of("id", "value"), -1, 0);
     assertThat(rows).hasSize(3);
     final var valuesById =
@@ -42,7 +39,7 @@ public class TestListQuery {
 
   @Test
   void testListFirstRows() throws URISyntaxException {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark)
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 2, 0);
     assertThat(rows).hasSize(2);
     final var valuesById =
@@ -56,7 +53,7 @@ public class TestListQuery {
 
   @Test
   void testListLastRow() throws URISyntaxException {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark)
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 1, 2);
     assertThat(rows).hasSize(1);
     final var valuesById =
@@ -69,15 +66,15 @@ public class TestListQuery {
   }
 
   @Test
-  void testListWithCondition() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark)
+  void testListWithCondition() throws URISyntaxException {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, new EqualCondition("id", 3L));
     assertThat(rows).hasSize(1).extracting(rowReader("value")).isEqualTo(-420d);
   }
 
   @Test
-  void testListWithComplexCondition() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark)
+  void testListWithComplexCondition() throws URISyntaxException {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows =
         ListQuery.list(
             dataframe,
