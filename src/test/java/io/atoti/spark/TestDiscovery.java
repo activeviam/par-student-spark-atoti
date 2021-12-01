@@ -42,9 +42,9 @@ public class TestDiscovery {
     assertTrue(dTypes.containsKey("label"));
     assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType);
     assertTrue(dTypes.containsKey("value"));
-    assertThat(dTypes.get("value")).isEqualTo(DataTypes.DoubleType.toString());
+    assertThat(dTypes.get("value")).isEqualTo(DataTypes.DoubleType);
     assertTrue(dTypes.containsKey("date"));
-    assertThat(dTypes.get("date")).isEqualTo(DataTypes.TimestampType.toString());
+    assertThat(dTypes.get("date")).isEqualTo(DataTypes.TimestampType);
   }
 
   @Test
@@ -60,19 +60,19 @@ public class TestDiscovery {
             .option("timestampFormat", "dd/MM/yyyy")
             .option("inferSchema", true)
             .load(url.toURI().getPath());
-    final Map<String, String> dTypes = Discovery.discoverDataframe(dataframe);
+    final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
     assertThat(dataframe).isNotNull();
     assertThat(dTypes).isNotNull();
 
     assertTrue(dTypes.containsKey("id"));
-    assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType.toString());
+    assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType);
     assertTrue(dTypes.containsKey("label"));
-    assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType.toString());
+    assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType);
     assertTrue(dTypes.containsKey("value"));
-    assertThat(dTypes.get("value")).isEqualTo(DataTypes.StringType.toString());
+    assertThat(dTypes.get("value")).isEqualTo(DataTypes.StringType);
     assertTrue(dTypes.containsKey("date"));
-    assertThat(dTypes.get("date")).isEqualTo(DataTypes.StringType.toString());
+    assertThat(dTypes.get("date")).isEqualTo(DataTypes.StringType);
   }
 
   @Test
@@ -100,26 +100,26 @@ public class TestDiscovery {
           dataframeToJoin.col("basic_id").equalTo(dataframe.col("id")),
           "inner"
     );
-    final Map<String, String> dTypes = Discovery.discoverDataframe(dataframeJoin);
+    final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframeJoin);
 
     assertThat(dataframe).isNotNull();
     assertThat(dataframeJoin).isNotNull();
     assertThat(dTypes).isNotNull();
 
     assertTrue(dTypes.containsKey("id"));
-    assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType.toString());
+    assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType);
     assertTrue(dTypes.containsKey("label"));
-    assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType.toString());
+    assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType);
     assertTrue(dTypes.containsKey("value"));
-    assertThat(dTypes.get("value")).isEqualTo(DataTypes.DoubleType.toString());
+    assertThat(dTypes.get("value")).isEqualTo(DataTypes.DoubleType);
     assertTrue(dTypes.containsKey("date"));
-    assertThat(dTypes.get("date")).isEqualTo(DataTypes.TimestampType.toString());
+    assertThat(dTypes.get("date")).isEqualTo(DataTypes.TimestampType);
     assertTrue(dTypes.containsKey("join_id"));
-    assertThat(dTypes.get("join_id")).isEqualTo(DataTypes.IntegerType.toString());
+    assertThat(dTypes.get("join_id")).isEqualTo(DataTypes.IntegerType);
     assertTrue(dTypes.containsKey("join_value"));
-    assertThat(dTypes.get("join_value")).isEqualTo(DataTypes.DoubleType.toString());
+    assertThat(dTypes.get("join_value")).isEqualTo(DataTypes.DoubleType);
     assertTrue(dTypes.containsKey("join_date"));
-    assertThat(dTypes.get("join_date")).isEqualTo(DataTypes.TimestampType.toString());
+    assertThat(dTypes.get("join_date")).isEqualTo(DataTypes.TimestampType);
   }
 
   @Test
@@ -137,20 +137,20 @@ public class TestDiscovery {
     dataframe = dataframe
           .withColumn("val1_minus_val2",dataframe.col("val1").minus(dataframe.col("val2")))
           .withColumn("val1_equal_val2",dataframe.col("val1").equalTo(dataframe.col("val2")));
-    final Map<String, String> dTypes = Discovery.discoverDataframe(dataframe);
+    final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
     assertThat(dataframe).isNotNull();
     assertThat(dTypes).isNotNull();
 
     assertTrue(dTypes.containsKey("id"));
-    assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType.toString());
+    assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType);
     assertTrue(dTypes.containsKey("val1"));
-    assertThat(dTypes.get("val1")).isEqualTo(DataTypes.IntegerType.toString());
+    assertThat(dTypes.get("val1")).isEqualTo(DataTypes.IntegerType);
     assertTrue(dTypes.containsKey("val2"));
-    assertThat(dTypes.get("val2")).isEqualTo(DataTypes.DoubleType.toString());
+    assertThat(dTypes.get("val2")).isEqualTo(DataTypes.DoubleType);
     assertTrue(dTypes.containsKey("val1_minus_val2"));
-    assertThat(dTypes.get("val1_minus_val2")).isEqualTo(DataTypes.DoubleType.toString());
+    assertThat(dTypes.get("val1_minus_val2")).isEqualTo(DataTypes.DoubleType);
     assertTrue(dTypes.containsKey("val1_equal_val2"));
-    assertThat(dTypes.get("val1_equal_val2")).isEqualTo(DataTypes.BooleanType.toString());
+    assertThat(dTypes.get("val1_equal_val2")).isEqualTo(DataTypes.BooleanType);
   }
 }
