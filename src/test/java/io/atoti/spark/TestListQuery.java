@@ -28,16 +28,7 @@ public class TestListQuery {
 
   @Test
   void testListAllDataFrame() throws URISyntaxException {
-    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    final URL url = Objects.requireNonNull(cl.getResource("csv/basic.csv"), "Cannot find file");
-    final Dataset<Row> dataframe = spark
-                    .read()
-                    .format("csv")
-                    .option("sep", ";")
-                    .option("header", true)
-                    .option("dateFormat", "dd/MM/yyyy")
-                    .option("inferSchema", true)
-                    .load(url.toURI().getPath());
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark)
     final List<Row> rows = ListQuery.list(dataframe, List.of("id", "value"), -1, 0);
     assertThat(rows).hasSize(3);
     final var valuesById =
@@ -51,16 +42,7 @@ public class TestListQuery {
 
   @Test
   void testListFirstRows() throws URISyntaxException {
-    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    final URL url = Objects.requireNonNull(cl.getResource("csv/basic.csv"), "Cannot find file");
-    final Dataset<Row> dataframe = spark
-            .read()
-            .format("csv")
-            .option("sep", ";")
-            .option("header", true)
-            .option("dateFormat", "dd/MM/yyyy")
-            .option("inferSchema", true)
-            .load(url.toURI().getPath());
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark)
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 2, 0);
     assertThat(rows).hasSize(2);
     final var valuesById =
@@ -74,16 +56,7 @@ public class TestListQuery {
 
   @Test
   void testListLastRow() throws URISyntaxException {
-    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    final URL url = Objects.requireNonNull(cl.getResource("csv/basic.csv"), "Cannot find file");
-    final Dataset<Row> dataframe = spark
-            .read()
-            .format("csv")
-            .option("sep", ";")
-            .option("header", true)
-            .option("dateFormat", "dd/MM/yyyy")
-            .option("inferSchema", true)
-            .load(url.toURI().getPath());
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark)
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 1, 2);
     assertThat(rows).hasSize(1);
     final var valuesById =
@@ -97,14 +70,14 @@ public class TestListQuery {
 
   @Test
   void testListWithCondition() {
-    final Object dataframe = null;
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark)
     final var rows = ListQuery.list(dataframe, new EqualCondition("id", 3L));
     assertThat(rows).hasSize(1).extracting(rowReader("value")).isEqualTo(-420d);
   }
 
   @Test
   void testListWithComplexCondition() {
-    final Object dataframe = null;
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark)
     final var rows =
         ListQuery.list(
             dataframe,
