@@ -11,6 +11,7 @@ import java.util.Objects;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.junit.jupiter.api.Test;
 
@@ -31,15 +32,15 @@ public class TestDiscovery {
             .option("timestampFormat", "dd/MM/yyyy")
             .option("inferSchema", true)
             .load(url.toURI().getPath());
-    final Map<String, String> dTypes = Discovery.discoverDataframe(dataframe);
+    final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
     assertThat(dataframe).isNotNull();
     assertThat(dTypes).isNotNull();
 
     assertTrue(dTypes.containsKey("id"));
-    assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType.toString());
+    assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType);
     assertTrue(dTypes.containsKey("label"));
-    assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType.toString());
+    assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType);
     assertTrue(dTypes.containsKey("value"));
     assertThat(dTypes.get("value")).isEqualTo(DataTypes.DoubleType.toString());
     assertTrue(dTypes.containsKey("date"));
