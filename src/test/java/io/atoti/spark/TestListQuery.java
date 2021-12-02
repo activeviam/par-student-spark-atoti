@@ -70,6 +70,13 @@ public class TestListQuery {
   }
 
   @Test
+  void testNoRow() throws URISyntaxException {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final var rows = ListQuery.list(dataframe, List.of("id", "value"), 0, 0);
+    assertThat(rows).hasSize(0);
+  }
+
+  @Test
   void testListWithCondition() throws URISyntaxException {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, new EqualCondition("id", 3));
