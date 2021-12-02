@@ -32,8 +32,4 @@ public class ListQuery {
   public static List<Row> list(Dataset<Row> dataframe, QueryCondition condition) {
     return dataframe.filter(condition.getCondition()).collectAsList();
   }
-
-  public static List<Object> list(Object dataframe, QueryCondition condition) {
-    throw new UnsupportedOperationException("TODO");
-  }
 }
