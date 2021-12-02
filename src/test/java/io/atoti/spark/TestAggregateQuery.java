@@ -1,5 +1,6 @@
 package io.atoti.spark;
 
+import io.atoti.spark.aggregation.Avg;
 import io.atoti.spark.aggregation.Count;
 import io.atoti.spark.aggregation.Max;
 import io.atoti.spark.aggregation.Min;
@@ -26,7 +27,11 @@ class TestAggregateQuery {
 		final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
 		final var rows = AggregateQuery
 				.aggregate(dataframe, List.of("label"),
-						List.of(new Count("c"), new Sum("s", "value"), new Max("M", "id")), TrueCondition.value())
+						List.of(
+							new Count("c"),
+							new Sum("s", "value"),
+							new Max("M", "id"),
+							new Avg("avg", "value")))
 				.collectAsList();
 
 		// result must have 2 values
@@ -40,6 +45,7 @@ class TestAggregateQuery {
 		assertThat((long) rowA.getAs("c")).isEqualTo(2);
 		assertThat((double) rowA.getAs("s")).isEqualTo(25.91);
 		assertThat((int) rowA.getAs("M")).isEqualTo(2);
+		assertThat((double) rowA.getAs("avg")).isEqualTo(12.955);
 
 		// for label = b -> c = 1, s = -420, M = 3
 		final var rowB = rowsByLabel.get("b");
@@ -52,7 +58,7 @@ class TestAggregateQuery {
 	void testWithEmptyGroupBy() {
 		final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
 		final var rows = AggregateQuery
-				.aggregate(dataframe, List.of(), List.of(new Count("c"), new Min("M", "id")), TrueCondition.value())
+				.aggregate(dataframe, List.of(), List.of(new Count("c"), new Min("M", "id")))
 				.collectAsList();
 
 		// result must have only 1 value

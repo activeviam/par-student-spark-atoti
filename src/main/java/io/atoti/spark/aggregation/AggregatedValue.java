@@ -2,7 +2,7 @@ package io.atoti.spark.aggregation;
 
 import org.apache.spark.sql.Column;
 
-public sealed interface AggregatedValue permits Sum, Min, Max, Count {
+public sealed interface AggregatedValue permits Sum, Min, Max, Count, Avg {
 
   /**
    * Returns the name of the aggregated value.

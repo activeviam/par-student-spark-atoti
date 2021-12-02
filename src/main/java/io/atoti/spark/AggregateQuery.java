@@ -2,6 +2,8 @@ package io.atoti.spark;
 
 import io.atoti.spark.aggregation.AggregatedValue;
 import io.atoti.spark.condition.QueryCondition;
+import io.atoti.spark.condition.TrueCondition;
+
 
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +21,14 @@ public class AggregateQuery {
    * @param groupByColumns names of the columns to consider to group-by the provided dataframe
    * @param aggregations aggregated values to return with the result
    */
+	
+  public static Dataset<Row> aggregate(
+		  Dataset<Row> dataframe,
+	      List<String> groupByColumns,
+	      List<AggregatedValue> aggregations) {
+	  return aggregate(dataframe, groupByColumns, aggregations, TrueCondition.value());
+  }
+	
   public static Dataset<Row> aggregate(
       Dataset<Row> dataframe,
       List<String> groupByColumns,
