@@ -20,6 +20,9 @@ public class ListQuery {
 	 * @return list of rows extracted from the DataFrame
 	 */
 	public static List<Row> list(Dataset<Row> dataframe, List<String> wantedColumns, int limit, int offset) {
+		if (offset < 0) {
+			throw new IllegalArgumentException("Cannot accept a negative offset");
+		}
 		final Column[] columns = wantedColumns.stream().map(functions::col).toArray(Column[]::new);
 		if(limit >= 0) {
 			return Arrays.asList((Row[]) dataframe.select(columns).limit(limit + offset).tail(limit));
