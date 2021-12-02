@@ -1,6 +1,5 @@
 package io.atoti.spark;
 
-
 import io.atoti.spark.aggregation.Count;
 import io.atoti.spark.aggregation.Max;
 import io.atoti.spark.aggregation.Min;

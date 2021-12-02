@@ -1,6 +1,8 @@
 package io.atoti.spark.condition;
 
 import java.util.List;
+import org.apache.spark.api.java.function.FilterFunction;
+import org.apache.spark.sql.Row;
 
 public record AndCondition(List<QueryCondition> conditions) implements QueryCondition {
 
@@ -12,5 +14,20 @@ public record AndCondition(List<QueryCondition> conditions) implements QueryCond
 
   public static AndCondition of(final QueryCondition... conditions) {
     return new AndCondition(List.of(conditions));
+  }
+
+  @Override
+  public FilterFunction<Row> getCondition() {
+    return (Row row) ->
+        this.conditions.stream()
+            .allMatch(
+                (condition) -> {
+                  final var filterFunction = condition.getCondition();
+                  try {
+                    return filterFunction.call(row);
+                  } catch (Exception e) {
+                    throw new IllegalStateException("Failed to execute condition " + condition, e);
+                  }
+                });
   }
 }

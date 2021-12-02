@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.activeviam.students</groupId>
-  <artifactId>spark-atoti</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <name>Spark + Atoti student project</name>
+	<groupId>com.activeviam.students</groupId>
+	<artifactId>spark-atoti</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>Spark + Atoti student project</name>
 
   <properties>
     <java.version>16</java.version>
@@ -72,14 +72,15 @@
         </configuration>
       </plugin>
 
-      <plugin>
-        <artifactId>maven-install-plugin</artifactId>
-        <version>2.4</version>
-        <!-- Do not contribute the resulting jar to maven repository, as no one will use it -->
-        <configuration>
-          <skip>true</skip>
-        </configuration>
-      </plugin>
+			<plugin>
+				<artifactId>maven-install-plugin</artifactId>
+				<version>2.4</version>
+				<!-- Do not contribute the resulting jar to maven repository, as no one 
+					will use it -->
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
