@@ -1,11 +1,10 @@
 package io.atoti.spark.aggregation;
 
-import org.apache.spark.sql.Column;
+import static org.apache.spark.sql.functions.avg;
+import static org.apache.spark.sql.functions.col;
 
 import java.util.Objects;
-
-import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.functions.avg;
+import org.apache.spark.sql.Column;
 
 public record Avg(String name, String column) implements AggregatedValue {
 

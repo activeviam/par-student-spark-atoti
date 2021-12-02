@@ -1,10 +1,9 @@
 package io.atoti.spark.aggregation;
 
-import org.apache.spark.sql.Column;
+import static org.apache.spark.sql.functions.*;
 
 import java.util.Objects;
-
-import static org.apache.spark.sql.functions.*;
+import org.apache.spark.sql.Column;
 
 /**
  * Count is a special function very standard in atoti that returns the number of rows that have been
