@@ -1,7 +1,5 @@
 package io.atoti.spark;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.atoti.spark.condition.AndCondition;
 import io.atoti.spark.condition.EqualCondition;
 import io.atoti.spark.condition.NotCondition;
@@ -17,6 +15,8 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.*;
 
 public class TestListQuery {
 
@@ -88,6 +88,13 @@ public class TestListQuery {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), -1, 5);
     assertThat(rows).hasSize(0);
+  }
+
+  @Test
+  void testNegativeOffset() throws URISyntaxException {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    assertThatThrownBy(() -> ListQuery.list(dataframe, List.of("id", "value"), 3, -2))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
