@@ -94,7 +94,8 @@ public class TestListQuery {
     return row.getAs(column);
   }
 
-  static <T> Function<Object, T> rowReader(final String column) {
+  @SuppressWarnings("unchecked")
+static <T> Function<Object, T> rowReader(final String column) {
     return row -> (T) readRowValue((Row) row, column);
   }
 }
