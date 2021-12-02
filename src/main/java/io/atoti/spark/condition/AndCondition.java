@@ -19,16 +19,13 @@ public record AndCondition(List<QueryCondition> conditions) implements QueryCond
 
 	@Override
 	public FilterFunction<Row> getCondition() {
-		return (Row row) -> this.conditions.stream()
-				.map(QueryCondition::getCondition)
-				.map((filterFunction) -> {
-					try {
-						return filterFunction.call(row);
-					} catch (Exception e) {
-						e.printStackTrace();
-						return false;
-					}
-				})
-				.reduce(true, (a, b) -> a && b);
+		return (Row row) -> this.conditions.stream().allMatch((condition) -> {
+			final var filterFunction = condition.getCondition();
+			try {
+				return filterFunction.call(row);
+			} catch (Exception e) {
+				throw new IllegalStateException("Failed to execute condition " + condition, e);
+			}
+		});
 	}
 }
