@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.atoti.spark.condition.AndCondition;
 import io.atoti.spark.condition.EqualCondition;
+import io.atoti.spark.condition.FalseCondition;
 import io.atoti.spark.condition.NotCondition;
 import io.atoti.spark.condition.NullCondition;
 import io.atoti.spark.condition.OrCondition;
@@ -109,6 +110,16 @@ public class TestListQuery {
                 new NotCondition(
                     OrCondition.of(new EqualCondition("id", 1), new NullCondition("value")))));
     assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(2);
+  }
+  
+  @Test
+  void testListWithFalseCondition() {
+	  final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+	    final var rows =
+	        ListQuery.list(
+	            dataframe,
+	            FalseCondition.value());
+	    assertThat(rows).isEmpty();
   }
 
   static Object readRowValue(final Row row, final String column) {
