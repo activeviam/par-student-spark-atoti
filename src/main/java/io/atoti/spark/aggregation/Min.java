@@ -1,11 +1,10 @@
 package io.atoti.spark.aggregation;
 
-import org.apache.spark.sql.Column;
-
-import java.util.Objects;
-
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.min;
+
+import java.util.Objects;
+import org.apache.spark.sql.Column;
 
 public record Min(String name, String column) implements AggregatedValue {
 
