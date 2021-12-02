@@ -24,10 +24,14 @@ public class ListQuery {
 			throw new IllegalArgumentException("Cannot accept a negative offset");
 		}
 		final Column[] columns = wantedColumns.stream().map(functions::col).toArray(Column[]::new);
+		final int dfSize = (int) dataframe.count();
+
 		if(limit >= 0) {
-			return Arrays.asList((Row[]) dataframe.select(columns).limit(limit + offset).tail(limit));
+			return Arrays.asList((Row[]) dataframe.select(columns).limit(limit + offset).tail(
+					limit + offset <= dfSize ? limit : Math.max(0, dfSize - offset)
+			));
 		} else {
-			return Arrays.asList((Row[]) dataframe.select(columns).tail(Math.max((int) dataframe.count() - offset, 0)));
+			return Arrays.asList((Row[]) dataframe.select(columns).tail(Math.max(dfSize - offset, 0)));
 		}
 	}
 
