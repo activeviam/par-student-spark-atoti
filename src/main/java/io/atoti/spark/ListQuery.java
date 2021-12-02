@@ -24,7 +24,7 @@ public class ListQuery {
 		if(limit >= 0) {
 			return Arrays.asList((Row[]) dataframe.select(columns).limit(limit + offset).tail(limit));
 		} else {
-			return Arrays.asList((Row[]) dataframe.select(columns).tail((int) dataframe.count() - offset));
+			return Arrays.asList((Row[]) dataframe.select(columns).tail(Math.max((int) dataframe.count() - offset, 0)));
 		}
 	}
 
