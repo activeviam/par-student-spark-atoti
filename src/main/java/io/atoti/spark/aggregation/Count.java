@@ -4,8 +4,7 @@ import org.apache.spark.sql.Column;
 
 import java.util.Objects;
 
-import static org.apache.spark.sql.functions.count;
-import static org.apache.spark.sql.functions.lit;
+import static org.apache.spark.sql.functions.*;
 
 /**
  * Count is a special function very standard in atoti that returns the number of rows that have been
@@ -37,5 +36,9 @@ public record Count(String name) implements AggregatedValue {
 
   public Column getAggregateColumn() {
     return count(lit(1)).alias(name);
+  }
+
+  public Column getName() {
+    return col(name);
   }
 }

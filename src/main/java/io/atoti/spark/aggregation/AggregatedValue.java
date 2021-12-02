@@ -11,4 +11,5 @@ public sealed interface AggregatedValue permits Sum, Min, Max, Count {
    * query.
    */
   Column getAggregateColumn();
+  Column getName();
 }

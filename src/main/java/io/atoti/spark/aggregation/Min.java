@@ -4,6 +4,7 @@ import org.apache.spark.sql.Column;
 
 import java.util.Objects;
 
+import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.min;
 
 public record Min(String name, String column) implements AggregatedValue {
@@ -15,5 +16,9 @@ public record Min(String name, String column) implements AggregatedValue {
 
   public Column getAggregateColumn() {
     return min(column).alias(name);
+  }
+
+  public Column getName() {
+    return col(name);
   }
 }
