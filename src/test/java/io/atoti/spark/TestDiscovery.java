@@ -3,11 +3,7 @@ package io.atoti.spark;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Map;
-import java.util.Objects;
-
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -15,23 +11,13 @@ import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.junit.jupiter.api.Test;
 
-
 public class TestDiscovery {
   SparkSession spark =
       SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
 
   @Test
-  void testDiscoveryBasis() throws URISyntaxException {
-    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    final URL url = Objects.requireNonNull(cl.getResource("csv/basic.csv"), "Cannot find file");
-
-    final Dataset<Row> dataframe = spark.read()
-            .format("csv")
-            .option("sep", ";")
-            .option("header", true)
-            .option("timestampFormat", "dd/MM/yyyy")
-            .option("inferSchema", true)
-            .load(url.toURI().getPath());
+  void testDiscoveryBasis() {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
     assertThat(dataframe).isNotNull();
@@ -48,18 +34,9 @@ public class TestDiscovery {
   }
 
   @Test
-  void testDiscoveryTwoTypesInSameColumn() throws URISyntaxException {
-    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    final URL url =
-            Objects.requireNonNull(cl.getResource("csv/twoTypesInSameColumn.csv"), "Cannot find file");
+  void testDiscoveryTwoTypesInSameColumn() {
 
-    final Dataset<Row> dataframe = spark.read()
-            .format("csv")
-            .option("sep", ";")
-            .option("header", true)
-            .option("timestampFormat", "dd/MM/yyyy")
-            .option("inferSchema", true)
-            .load(url.toURI().getPath());
+    final Dataset<Row> dataframe = CsvReader.read("csv/twoTypesInSameColumn.csv", spark);
     final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
     assertThat(dataframe).isNotNull();
@@ -76,30 +53,14 @@ public class TestDiscovery {
   }
 
   @Test
-  void testDiscoveryJoin() throws URISyntaxException {
-    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    final URL url = Objects.requireNonNull(cl.getResource("csv/basic.csv"), "Cannot find file");
-    final URL urlToJoin = Objects.requireNonNull(cl.getResource("csv/toJoin.csv"), "Cannot find file");
+  void testDiscoveryJoin() {
 
-    final Dataset<Row> dataframe = spark.read()
-            .format("csv")
-            .option("sep", ";")
-            .option("header", true)
-            .option("timestampFormat", "dd/MM/yyyy")
-            .option("inferSchema", true)
-            .load(url.toURI().getPath());
-    final Dataset<Row> dataframeToJoin = spark.read()
-          .format("csv")
-          .option("sep", ";")
-          .option("header", true)
-          .option("timestampFormat", "dd/MM/yyyy")
-          .option("inferSchema", true)
-          .load(urlToJoin.toURI().getPath());
-    final Dataset<Row> dataframeJoin = dataframe.join(
-          dataframeToJoin,
-          dataframeToJoin.col("basic_id").equalTo(dataframe.col("id")),
-          "inner"
-    );
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframeToJoin = CsvReader.read("csv/toJoin.csv", spark);
+
+    final Dataset<Row> dataframeJoin =
+        dataframe.join(
+            dataframeToJoin, dataframeToJoin.col("basic_id").equalTo(dataframe.col("id")), "inner");
     final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframeJoin);
 
     assertThat(dataframe).isNotNull();
@@ -123,20 +84,13 @@ public class TestDiscovery {
   }
 
   @Test
-  void testDiscoveryCalculate() throws URISyntaxException {
-    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    final URL url = Objects.requireNonNull(cl.getResource("csv/calculate.csv"), "Cannot find file");
+  void testDiscoveryCalculate() {
 
-    Dataset<Row> dataframe = spark.read()
-          .format("csv")
-          .option("sep", ";")
-          .option("header", true)
-          .option("timestampFormat", "dd/MM/yyyy")
-          .option("inferSchema", true)
-          .load(url.toURI().getPath());
-    dataframe = dataframe
-          .withColumn("val1_minus_val2",dataframe.col("val1").minus(dataframe.col("val2")))
-          .withColumn("val1_equal_val2",dataframe.col("val1").equalTo(dataframe.col("val2")));
+    Dataset<Row> dataframe = CsvReader.read("csv/calculate.csv", spark);
+    dataframe =
+        dataframe
+            .withColumn("val1_minus_val2", dataframe.col("val1").minus(dataframe.col("val2")))
+            .withColumn("val1_equal_val2", dataframe.col("val1").equalTo(dataframe.col("val2")));
     final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
     assertThat(dataframe).isNotNull();

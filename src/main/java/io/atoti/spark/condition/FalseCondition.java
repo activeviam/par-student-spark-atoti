@@ -6,10 +6,17 @@
  */
 package io.atoti.spark.condition;
 
+import org.apache.spark.api.java.function.FilterFunction;
+import org.apache.spark.sql.Row;
+
 public record FalseCondition() implements QueryCondition {
 
-	public static FalseCondition value() {
-		return new FalseCondition();
-	}
+  public static FalseCondition value() {
+    return new FalseCondition();
+  }
 
+  @Override
+  public FilterFunction<Row> getCondition() {
+    return (Row row) -> false;
+  }
 }
