@@ -6,12 +6,10 @@ import io.atoti.spark.condition.FalseCondition;
 import io.atoti.spark.condition.NotCondition;
 import io.atoti.spark.condition.NullCondition;
 import io.atoti.spark.condition.OrCondition;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -19,17 +17,17 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
 
-public class TestListQuery {
+class TestListQuery {
 
   SparkSession spark =
-          SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+      SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
 
   public TestListQuery() {
 	  this.spark.sparkContext().setLogLevel("ERROR");
   }
   
   @Test
-  void testListAllDataFrame() throws URISyntaxException {
+  void testListAllDataFrame() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final List<Row> rows = ListQuery.list(dataframe, List.of("id", "value"), -1, 0);
     assertThat(rows).hasSize(3);
@@ -43,7 +41,7 @@ public class TestListQuery {
   }
 
   @Test
-  void testListFirstRows() throws URISyntaxException {
+  void testListFirstRows() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 2, 0);
     assertThat(rows).hasSize(2);
@@ -57,7 +55,7 @@ public class TestListQuery {
   }
 
   @Test
-  void testListLastRow() throws URISyntaxException {
+  void testListLastRow() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 1, 2);
     assertThat(rows).hasSize(1);
@@ -71,35 +69,35 @@ public class TestListQuery {
   }
 
   @Test
-  void testNoRow() throws URISyntaxException {
+  void testNoRow() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 0, 0);
     assertThat(rows).hasSize(0);
   }
 
   @Test
-  void testTooBigLimit() throws URISyntaxException {
+  void testTooBigLimit() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 5, 0);
     assertThat(rows).hasSize(3);
   }
 
   @Test
-  void testTooBigOffset() throws URISyntaxException {
+  void testTooBigOffset() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), -1, 5);
     assertThat(rows).hasSize(0);
   }
 
   @Test
-  void testNegativeOffset() throws URISyntaxException {
+  void testNegativeOffset() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     assertThatThrownBy(() -> ListQuery.list(dataframe, List.of("id", "value"), 3, -2))
             .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
-  void testListWithCondition() throws URISyntaxException {
+  void testListWithCondition() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, new EqualCondition("id", 3));
     System.out.println(rows);
@@ -107,7 +105,7 @@ public class TestListQuery {
   }
 
   @Test
-  void testListWithComplexCondition() throws URISyntaxException {
+  void testListWithComplexCondition() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows =
         ListQuery.list(
@@ -134,7 +132,7 @@ public class TestListQuery {
   }
 
   @SuppressWarnings("unchecked")
-static <T> Function<Object, T> rowReader(final String column) {
+  static <T> Function<Object, T> rowReader(final String column) {
     return row -> (T) readRowValue((Row) row, column);
   }
 }

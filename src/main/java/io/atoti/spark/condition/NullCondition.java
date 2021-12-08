@@ -5,7 +5,8 @@ import org.apache.spark.sql.Row;
 
 public record NullCondition(String fieldName) implements QueryCondition {
 
-	@Override
-	public FilterFunction<Row> getCondition() {
-		return (Row row) -> (row.isNullAt(row.fieldIndex(fieldName)));
-	} }
+  @Override
+  public FilterFunction<Row> getCondition() {
+    return (Row row) -> (row.isNullAt(row.fieldIndex(fieldName)));
+  }
+}

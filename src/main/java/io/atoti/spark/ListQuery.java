@@ -1,13 +1,12 @@
 package io.atoti.spark;
 
 import io.atoti.spark.condition.QueryCondition;
+import java.util.Arrays;
+import java.util.List;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
-
-import java.util.Arrays;
-import java.util.List;
 
 
 public class ListQuery {
@@ -31,8 +30,7 @@ public class ListQuery {
 		}
 	}
 
-	public static List<Row> list(Dataset<Row> dataframe, QueryCondition condition) {
-		return dataframe.filter(condition.getCondition()).collectAsList();
-	}
-
+  public static List<Row> list(Dataset<Row> dataframe, QueryCondition condition) {
+    return dataframe.filter(condition.getCondition()).collectAsList();
+  }
 }

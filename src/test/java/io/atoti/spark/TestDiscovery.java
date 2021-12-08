@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
-
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -13,95 +12,99 @@ import org.apache.spark.sql.types.DataTypes;
 import org.junit.jupiter.api.Test;
 
 public class TestDiscovery {
-	SparkSession spark = SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+  SparkSession spark =
+      SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
 
-	@Test
-	void testDiscoveryBasis() {
-		final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
-		final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
+  @Test
+  void testDiscoveryBasis() {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
-		assertThat(dataframe).isNotNull();
-		assertThat(dTypes).isNotNull();
+    assertThat(dataframe).isNotNull();
+    assertThat(dTypes).isNotNull();
 
-		assertTrue(dTypes.containsKey("id"));
-		assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType);
-		assertTrue(dTypes.containsKey("label"));
-		assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType);
-		assertTrue(dTypes.containsKey("value"));
-		assertThat(dTypes.get("value")).isEqualTo(DataTypes.DoubleType);
-		assertTrue(dTypes.containsKey("date"));
-		assertThat(dTypes.get("date")).isEqualTo(DataTypes.TimestampType);
-	}
+    assertTrue(dTypes.containsKey("id"));
+    assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType);
+    assertTrue(dTypes.containsKey("label"));
+    assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType);
+    assertTrue(dTypes.containsKey("value"));
+    assertThat(dTypes.get("value")).isEqualTo(DataTypes.DoubleType);
+    assertTrue(dTypes.containsKey("date"));
+    assertThat(dTypes.get("date")).isEqualTo(DataTypes.TimestampType);
+  }
 
-	@Test
-	void testDiscoveryTwoTypesInSameColumn() {
+  @Test
+  void testDiscoveryTwoTypesInSameColumn() {
 
-		final Dataset<Row> dataframe = CsvReader.read("csv/twoTypesInSameColumn.csv", spark);
-		final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
+    final Dataset<Row> dataframe = CsvReader.read("csv/twoTypesInSameColumn.csv", spark);
+    final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
-		assertThat(dataframe).isNotNull();
-		assertThat(dTypes).isNotNull();
+    assertThat(dataframe).isNotNull();
+    assertThat(dTypes).isNotNull();
 
-		assertTrue(dTypes.containsKey("id"));
-		assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType);
-		assertTrue(dTypes.containsKey("label"));
-		assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType);
-		assertTrue(dTypes.containsKey("value"));
-		assertThat(dTypes.get("value")).isEqualTo(DataTypes.StringType);
-		assertTrue(dTypes.containsKey("date"));
-		assertThat(dTypes.get("date")).isEqualTo(DataTypes.StringType);
-	}
+    assertTrue(dTypes.containsKey("id"));
+    assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType);
+    assertTrue(dTypes.containsKey("label"));
+    assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType);
+    assertTrue(dTypes.containsKey("value"));
+    assertThat(dTypes.get("value")).isEqualTo(DataTypes.StringType);
+    assertTrue(dTypes.containsKey("date"));
+    assertThat(dTypes.get("date")).isEqualTo(DataTypes.StringType);
+  }
 
-	@Test
-	void testDiscoveryJoin() {
+  @Test
+  void testDiscoveryJoin() {
 
-		final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
-		final Dataset<Row> dataframeToJoin = CsvReader.read("csv/toJoin.csv", spark);
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframeToJoin = CsvReader.read("csv/toJoin.csv", spark);
 
-		final Dataset<Row> dataframeJoin = dataframe.join(dataframeToJoin,
-				dataframeToJoin.col("basic_id").equalTo(dataframe.col("id")), "inner");
-		final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframeJoin);
+    final Dataset<Row> dataframeJoin =
+        dataframe.join(
+            dataframeToJoin, dataframeToJoin.col("basic_id").equalTo(dataframe.col("id")), "inner");
+    final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframeJoin);
 
-		assertThat(dataframe).isNotNull();
-		assertThat(dataframeJoin).isNotNull();
-		assertThat(dTypes).isNotNull();
+    assertThat(dataframe).isNotNull();
+    assertThat(dataframeJoin).isNotNull();
+    assertThat(dTypes).isNotNull();
 
-		assertTrue(dTypes.containsKey("id"));
-		assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType);
-		assertTrue(dTypes.containsKey("label"));
-		assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType);
-		assertTrue(dTypes.containsKey("value"));
-		assertThat(dTypes.get("value")).isEqualTo(DataTypes.DoubleType);
-		assertTrue(dTypes.containsKey("date"));
-		assertThat(dTypes.get("date")).isEqualTo(DataTypes.TimestampType);
-		assertTrue(dTypes.containsKey("join_id"));
-		assertThat(dTypes.get("join_id")).isEqualTo(DataTypes.IntegerType);
-		assertTrue(dTypes.containsKey("join_value"));
-		assertThat(dTypes.get("join_value")).isEqualTo(DataTypes.DoubleType);
-		assertTrue(dTypes.containsKey("join_date"));
-		assertThat(dTypes.get("join_date")).isEqualTo(DataTypes.TimestampType);
-	}
+    assertTrue(dTypes.containsKey("id"));
+    assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType);
+    assertTrue(dTypes.containsKey("label"));
+    assertThat(dTypes.get("label")).isEqualTo(DataTypes.StringType);
+    assertTrue(dTypes.containsKey("value"));
+    assertThat(dTypes.get("value")).isEqualTo(DataTypes.DoubleType);
+    assertTrue(dTypes.containsKey("date"));
+    assertThat(dTypes.get("date")).isEqualTo(DataTypes.TimestampType);
+    assertTrue(dTypes.containsKey("join_id"));
+    assertThat(dTypes.get("join_id")).isEqualTo(DataTypes.IntegerType);
+    assertTrue(dTypes.containsKey("join_value"));
+    assertThat(dTypes.get("join_value")).isEqualTo(DataTypes.DoubleType);
+    assertTrue(dTypes.containsKey("join_date"));
+    assertThat(dTypes.get("join_date")).isEqualTo(DataTypes.TimestampType);
+  }
 
-	@Test
-	void testDiscoveryCalculate() {
+  @Test
+  void testDiscoveryCalculate() {
 
-		Dataset<Row> dataframe = CsvReader.read("csv/calculate.csv", spark);
-		dataframe = dataframe.withColumn("val1_minus_val2", dataframe.col("val1").minus(dataframe.col("val2")))
-				.withColumn("val1_equal_val2", dataframe.col("val1").equalTo(dataframe.col("val2")));
-		final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
+    Dataset<Row> dataframe = CsvReader.read("csv/calculate.csv", spark);
+    dataframe =
+        dataframe
+            .withColumn("val1_minus_val2", dataframe.col("val1").minus(dataframe.col("val2")))
+            .withColumn("val1_equal_val2", dataframe.col("val1").equalTo(dataframe.col("val2")));
+    final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
-		assertThat(dataframe).isNotNull();
-		assertThat(dTypes).isNotNull();
+    assertThat(dataframe).isNotNull();
+    assertThat(dTypes).isNotNull();
 
-		assertTrue(dTypes.containsKey("id"));
-		assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType);
-		assertTrue(dTypes.containsKey("val1"));
-		assertThat(dTypes.get("val1")).isEqualTo(DataTypes.IntegerType);
-		assertTrue(dTypes.containsKey("val2"));
-		assertThat(dTypes.get("val2")).isEqualTo(DataTypes.DoubleType);
-		assertTrue(dTypes.containsKey("val1_minus_val2"));
-		assertThat(dTypes.get("val1_minus_val2")).isEqualTo(DataTypes.DoubleType);
-		assertTrue(dTypes.containsKey("val1_equal_val2"));
-		assertThat(dTypes.get("val1_equal_val2")).isEqualTo(DataTypes.BooleanType);
-	}
+    assertTrue(dTypes.containsKey("id"));
+    assertThat(dTypes.get("id")).isEqualTo(DataTypes.IntegerType);
+    assertTrue(dTypes.containsKey("val1"));
+    assertThat(dTypes.get("val1")).isEqualTo(DataTypes.IntegerType);
+    assertTrue(dTypes.containsKey("val2"));
+    assertThat(dTypes.get("val2")).isEqualTo(DataTypes.DoubleType);
+    assertTrue(dTypes.containsKey("val1_minus_val2"));
+    assertThat(dTypes.get("val1_minus_val2")).isEqualTo(DataTypes.DoubleType);
+    assertTrue(dTypes.containsKey("val1_equal_val2"));
+    assertThat(dTypes.get("val1_equal_val2")).isEqualTo(DataTypes.BooleanType);
+  }
 }
