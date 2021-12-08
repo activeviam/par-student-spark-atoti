@@ -2,6 +2,7 @@ package io.atoti.spark;
 
 import io.atoti.spark.aggregation.AggregatedValue;
 import io.atoti.spark.condition.QueryCondition;
+import io.atoti.spark.condition.TrueCondition;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.spark.sql.Column;
@@ -18,6 +19,11 @@ public class AggregateQuery {
    * @param aggregations aggregated values to return with the result
    */
   public static Dataset<Row> aggregate(
+      Dataset<Row> dataframe, List<String> groupByColumns, List<AggregatedValue> aggregations) {
+    return aggregate(dataframe, groupByColumns, aggregations, TrueCondition.value());
+  }
+
+  public static Dataset<Row> aggregate(
       Dataset<Row> dataframe,
       List<String> groupByColumns,
       List<AggregatedValue> aggregations,
@@ -29,14 +35,14 @@ public class AggregateQuery {
 
     final Column[] columns = groupByColumns.stream().map(functions::col).toArray(Column[]::new);
     final Column[] createdColumns =
-        aggregations.stream().map(AggregatedValue::getName).toArray(Column[]::new);
+        aggregations.stream().map(AggregatedValue::toColumn).toArray(Column[]::new);
     final Column[] columnsToSelect = Arrays.copyOf(columns, columns.length + createdColumns.length);
     System.arraycopy(createdColumns, 0, columnsToSelect, columns.length, createdColumns.length);
 
-    final Column firstAggColumn = aggregations.get(0).getAggregateColumn();
+    final Column firstAggColumn = aggregations.get(0).toAggregateColumn();
     final Column[] nextAggColumns =
         aggregations.subList(1, aggregations.size()).stream()
-            .map(agg -> agg.getAggregateColumn())
+            .map(AggregatedValue::toAggregateColumn)
             .toArray(Column[]::new);
     return dataframe
         .filter(condition.getCondition())
