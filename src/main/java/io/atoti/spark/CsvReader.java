@@ -8,24 +8,27 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 public class CsvReader {
-  public static Dataset<Row> read(String path, SparkSession session) {
-    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    final URL url = Objects.requireNonNull(cl.getResource(path), "Cannot find file");
-
-    Dataset<Row> dataframe;
-    try {
-      dataframe =
-          session
-              .read()
-              .format("csv")
-              .option("sep", ";")
-              .option("header", true)
-              .option("timestampFormat", "dd/MM/yyyy")
-              .option("inferSchema", true)
-              .load(url.toURI().getPath());
-    } catch (URISyntaxException e) {
-      throw new IllegalArgumentException("Failed to read csv " + path, e);
+    public static Dataset<Row> read(String path, SparkSession session) {
+        return CsvReader.read(path, session, ";");
     }
+
+    public static Dataset<Row> read(String path, SparkSession session, String separator) {
+        final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        final URL url = Objects.requireNonNull(cl.getResource(path), "Cannot find file");
+
+        Dataset<Row> dataframe;
+		try {
+			dataframe = session
+                .read()
+                .format("csv")
+                .option("sep", separator)
+                .option("header", true)
+                .option("timestampFormat", "dd/MM/yyyy")
+                .option("inferSchema", true)
+                .load(url.toURI().getPath());
+		} catch (URISyntaxException e) {
+			throw new IllegalArgumentException("Failed to read csv " + path, e);
+		}
 
     return dataframe;
   }
