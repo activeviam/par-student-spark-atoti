@@ -116,7 +116,6 @@ public class TestListQuery {
   void testListWithCondition() throws URISyntaxException {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, new EqualCondition("id", 3));
-    System.out.println(rows);
     assertThat(rows).hasSize(1).extracting(rowReader("value")).first().isEqualTo(-420d);
   }
 

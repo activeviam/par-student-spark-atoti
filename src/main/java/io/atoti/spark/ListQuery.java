@@ -6,8 +6,9 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
 
-import java.util.Arrays;
 import java.util.List;
+
+import static org.apache.spark.sql.functions.monotonically_increasing_id;
 
 
 public class ListQuery {
@@ -23,15 +24,14 @@ public class ListQuery {
 		if (offset < 0) {
 			throw new IllegalArgumentException("Cannot accept a negative offset");
 		}
-		final Column[] columns = wantedColumns.stream().map(functions::col).toArray(Column[]::new);
-		final int dfSize = (int) dataframe.count();
 
-		if(limit >= 0) {
-			return Arrays.asList((Row[]) dataframe.select(columns).limit(limit + offset).tail(
-					limit + offset <= dfSize ? limit : Math.max(0, dfSize - offset)
-			));
+		final Column[] columns = wantedColumns.stream().map(functions::col).toArray(Column[]::new);
+		dataframe = dataframe.withColumn("_id", monotonically_increasing_id());
+
+		if(limit < 0) {
+			return dataframe.where(dataframe.col("_id").geq(offset)).select(columns).collectAsList();
 		} else {
-			return Arrays.asList((Row[]) dataframe.select(columns).tail(Math.max(dfSize - offset, 0)));
+			return dataframe.where(dataframe.col("_id").between(offset, offset + limit - 1)).select(columns).collectAsList();
 		}
 	}
 
