@@ -13,11 +13,11 @@ public record Max(String name, String column) implements AggregatedValue {
     Objects.requireNonNull(column, "No column provided");
   }
 
-  public Column getAggregateColumn() {
+  public Column toAggregateColumn() {
     return max(column).alias(name);
   }
 
-  public Column getName() {
+  public Column toColumn() {
     return col(name);
   }
 }

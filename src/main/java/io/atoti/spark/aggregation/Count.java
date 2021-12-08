@@ -33,11 +33,11 @@ public record Count(String name) implements AggregatedValue {
     Objects.requireNonNull(name, "No name provided");
   }
 
-  public Column getAggregateColumn() {
+  public Column toAggregateColumn() {
     return count(lit(1)).alias(name);
   }
 
-  public Column getName() {
+  public Column toColumn() {
     return col(name);
   }
 }

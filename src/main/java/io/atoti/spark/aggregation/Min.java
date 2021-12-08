@@ -13,11 +13,11 @@ public record Min(String name, String column) implements AggregatedValue {
     Objects.requireNonNull(column, "No column provided");
   }
 
-  public Column getAggregateColumn() {
+  public Column toAggregateColumn() {
     return min(column).alias(name);
   }
 
-  public Column getName() {
+  public Column toColumn() {
     return col(name);
   }
 }
