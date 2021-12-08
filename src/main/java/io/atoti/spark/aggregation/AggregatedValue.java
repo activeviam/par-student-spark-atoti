@@ -13,4 +13,6 @@ public sealed interface AggregatedValue permits Sum, Min, Max, Count, Avg {
   Column toAggregateColumn();
 
   Column toColumn();
+
+  String toSqlQuery();
 }

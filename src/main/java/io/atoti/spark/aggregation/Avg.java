@@ -20,4 +20,8 @@ public record Avg(String name, String column) implements AggregatedValue {
   public Column toColumn() {
     return col(name);
   }
+
+  public String toSqlQuery() {
+    return "AVG(" + column + ") AS " + name;
+  }
 }

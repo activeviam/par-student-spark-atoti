@@ -40,4 +40,8 @@ public record Count(String name) implements AggregatedValue {
   public Column toColumn() {
     return col(name);
   }
+
+  public String toSqlQuery() {
+    return "COUNT(*) AS " + name;
+  }
 }

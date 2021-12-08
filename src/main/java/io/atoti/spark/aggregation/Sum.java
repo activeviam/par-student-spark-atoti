@@ -20,4 +20,8 @@ public record Sum(String name, String column) implements AggregatedValue {
   public Column toColumn() {
     return col(name);
   }
+
+  public String toSqlQuery() {
+    return "SUM(" + column + ") AS " + name;
+  }
 }
