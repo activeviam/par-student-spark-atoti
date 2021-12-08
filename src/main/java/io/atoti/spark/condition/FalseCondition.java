@@ -15,9 +15,8 @@ public record FalseCondition() implements QueryCondition {
     return new FalseCondition();
   }
 
-	@Override
-	public FilterFunction<Row> getCondition() {
-		return (Row row) -> false;
-	}
-
+  @Override
+  public FilterFunction<Row> getCondition() {
+    return (Row row) -> false;
+  }
 }

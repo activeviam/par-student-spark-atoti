@@ -1,5 +1,7 @@
 package io.atoti.spark;
 
+import static org.assertj.core.api.Assertions.*;
+
 import io.atoti.spark.condition.AndCondition;
 import io.atoti.spark.condition.EqualCondition;
 import io.atoti.spark.condition.FalseCondition;
@@ -15,17 +17,15 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.*;
-
 class TestListQuery {
 
   SparkSession spark =
       SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
 
   public TestListQuery() {
-	  this.spark.sparkContext().setLogLevel("ERROR");
+    this.spark.sparkContext().setLogLevel("ERROR");
   }
-  
+
   @Test
   void testListAllDataFrame() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
@@ -93,7 +93,7 @@ class TestListQuery {
   void testNegativeOffset() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     assertThatThrownBy(() -> ListQuery.list(dataframe, List.of("id", "value"), 3, -2))
-            .isInstanceOf(IllegalArgumentException.class);
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -129,15 +129,12 @@ class TestListQuery {
                     OrCondition.of(new EqualCondition("id", 1), new NullCondition("value")))));
     assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(2);
   }
-  
+
   @Test
   void testListWithFalseCondition() {
-	  final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
-	    final var rows =
-	        ListQuery.list(
-	            dataframe,
-	            FalseCondition.value());
-	    assertThat(rows).isEmpty();
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final var rows = ListQuery.list(dataframe, FalseCondition.value());
+    assertThat(rows).isEmpty();
   }
 
   static Object readRowValue(final Row row, final String column) {
