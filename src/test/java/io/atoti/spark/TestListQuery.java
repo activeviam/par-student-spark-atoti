@@ -97,10 +97,23 @@ class TestListQuery {
   }
 
   @Test
+  void testTooBigOffsetWithLimit() {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final var rows = ListQuery.list(dataframe, List.of("id", "value"), 2, 5);
+    assertThat(rows).hasSize(0);
+  }
+
+  @Test
+  void testTooBigLimitWithOffset() {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final var rows = ListQuery.list(dataframe, List.of("id", "value"), 5, 2);
+    assertThat(rows).hasSize(1);
+  }
+
+  @Test
   void testListWithCondition() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, new EqualCondition("id", 3));
-    System.out.println(rows);
     assertThat(rows).hasSize(1).extracting(rowReader("value")).first().isEqualTo(-420d);
   }
 
