@@ -30,4 +30,11 @@ public record OrCondition(List<QueryCondition> conditions) implements QueryCondi
                   }
                 });
   }
+
+  @Override
+  public String toSqlQuery() {
+    return this.conditions.stream()
+        .map((condition) -> "(" + condition.toSqlQuery() + ")")
+        .reduce("", (acc, sqlQuery) -> acc + " OR " + sqlQuery);
+  }
 }

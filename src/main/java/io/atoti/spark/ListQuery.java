@@ -7,6 +7,7 @@ import java.util.List;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.functions;
 
 public class ListQuery {
@@ -57,5 +58,15 @@ public class ListQuery {
     }
 
     return dataframe.select(columns).collectAsList();
+  }
+
+  public static List<Row> listSql(SparkSession spark, String table, int limit, int offset) {
+    return spark
+        .sql("SELECT * FROM " + table + " LIMIT " + limit + " OFFSET " + offset)
+        .collectAsList();
+  }
+
+  public static List<Row> listSql(SparkSession spark, String table, QueryCondition condition) {
+    return spark.sql("SELECT * FROM " + table + " WHERE " + condition.toSqlQuery()).collectAsList();
   }
 }

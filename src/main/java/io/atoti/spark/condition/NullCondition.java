@@ -9,4 +9,9 @@ public record NullCondition(String fieldName) implements QueryCondition {
   public FilterFunction<Row> getCondition() {
     return (Row row) -> (row.isNullAt(row.fieldIndex(fieldName)));
   }
+
+  @Override
+  public String toSqlQuery() {
+    return "NULL";
+  }
 }

@@ -30,4 +30,11 @@ public record AndCondition(List<QueryCondition> conditions) implements QueryCond
                   }
                 });
   }
+
+  @Override
+  public String toSqlQuery() {
+    return this.conditions.stream()
+        .map((condition) -> "(" + condition.toSqlQuery() + ")")
+        .reduce("", (acc, sqlQuery) -> acc + " AND " + sqlQuery);
+  }
 }
