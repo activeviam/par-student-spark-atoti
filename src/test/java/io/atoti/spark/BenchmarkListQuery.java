@@ -1,6 +1,7 @@
 package io.atoti.spark;
 
 import org.apache.spark.sql.*;
+import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
@@ -20,6 +21,10 @@ public class BenchmarkListQuery {
     
     public static void main(String[] args) throws Exception {
     	org.openjdk.jmh.Main.main(args);
+    }
+
+    public static void main(String[] args) throws Exception {
+        Main.main(args);
     }
 
     @Setup()
