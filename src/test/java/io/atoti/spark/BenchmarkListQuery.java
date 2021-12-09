@@ -8,21 +8,30 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@State(Scope.Benchmark)
+@Fork(1)
 public class BenchmarkListQuery {
 
-    static SparkSession spark = SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
-    static Dataset<Row> dataframe = CsvReader.read("csv/US_accidents_Dec20_updated.csv", spark, ",");
-    static int limit = 100000;
-    static int offset = 100000;
-    static List<String> wantedColumns = List.of("ID", "Severity");
+    SparkSession spark;
+    Dataset<Row> dataframe;
+    int limit;
+    int offset;
+    List<String> wantedColumns;
 
-    public BenchmarkListQuery() {
+    @Setup()
+    public void setup() {
+        spark = SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
         spark.sparkContext().setLogLevel("ERROR");
+        dataframe = CsvReader.read("csv/US_accidents_Dec20_updated.csv", spark, ",");
+        limit = 100000;
+        offset = 100000;
+        wantedColumns = List.of("ID", "Severity");
     }
 
     @Benchmark
     @BenchmarkMode(Mode.SingleShotTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Measurement(iterations = 10)
     public void BenchmarkColumnId(Blackhole bh) {
         final List<Row> rows = ListQuery.list(dataframe, wantedColumns, limit, offset);
         bh.consume(rows);
@@ -31,6 +40,7 @@ public class BenchmarkListQuery {
     @Benchmark
     @BenchmarkMode(Mode.SingleShotTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Measurement(iterations = 10)
     public void BenchmarkLimitAndTail(Blackhole bh) {
         List<Row> rows;
 
