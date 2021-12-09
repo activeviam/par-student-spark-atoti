@@ -41,4 +41,21 @@ public class ListQuery {
   public static List<Row> list(Dataset<Row> dataframe, QueryCondition condition) {
     return dataframe.filter(condition.getCondition()).collectAsList();
   }
+
+  public static List<Row> list(Dataset<Row> dataframe, List<String> wantedColumns, QueryCondition condition, int limit, int offset) {
+    if (offset < 0) {
+      throw new IllegalArgumentException("Cannot accept a negative offset");
+    }
+
+    final Column[] columns = wantedColumns.stream().map(functions::col).toArray(Column[]::new);
+    dataframe = dataframe.filter(condition.getCondition()).withColumn("_id", monotonically_increasing_id());
+
+    if (limit < 0) {
+      dataframe = dataframe.where(dataframe.col("_id").geq(offset));
+    } else {
+      dataframe = dataframe.where(dataframe.col("_id").between(offset, offset + limit - 1));
+    }
+
+    return dataframe.select(columns).collectAsList();
+  }
 }
