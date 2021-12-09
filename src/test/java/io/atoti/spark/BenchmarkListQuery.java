@@ -31,6 +31,7 @@ public class BenchmarkListQuery {
     @Benchmark
     @BenchmarkMode(Mode.SingleShotTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 3)
     @Measurement(iterations = 10)
     public void BenchmarkColumnId(Blackhole bh) {
         final List<Row> rows = ListQuery.list(dataframe, wantedColumns, limit, offset);
@@ -40,6 +41,7 @@ public class BenchmarkListQuery {
     @Benchmark
     @BenchmarkMode(Mode.SingleShotTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 3)
     @Measurement(iterations = 10)
     public void BenchmarkLimitAndTail(Blackhole bh) {
         List<Row> rows;
