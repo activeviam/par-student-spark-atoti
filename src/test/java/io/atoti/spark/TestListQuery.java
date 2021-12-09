@@ -1,9 +1,10 @@
 package io.atoti.spark;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import io.atoti.spark.condition.AndCondition;
 import io.atoti.spark.condition.EqualCondition;
+import io.atoti.spark.condition.FalseCondition;
 import io.atoti.spark.condition.NotCondition;
 import io.atoti.spark.condition.NullCondition;
 import io.atoti.spark.condition.OrCondition;
@@ -68,10 +69,51 @@ class TestListQuery {
   }
 
   @Test
+  void testNoRow() {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final var rows = ListQuery.list(dataframe, List.of("id", "value"), 0, 0);
+    assertThat(rows).hasSize(0);
+  }
+
+  @Test
+  void testTooBigLimit() {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final var rows = ListQuery.list(dataframe, List.of("id", "value"), 5, 0);
+    assertThat(rows).hasSize(3);
+  }
+
+  @Test
+  void testTooBigOffset() {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final var rows = ListQuery.list(dataframe, List.of("id", "value"), -1, 5);
+    assertThat(rows).hasSize(0);
+  }
+
+  @Test
+  void testNegativeOffset() {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    assertThatThrownBy(() -> ListQuery.list(dataframe, List.of("id", "value"), 3, -2))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void testTooBigOffsetWithLimit() {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final var rows = ListQuery.list(dataframe, List.of("id", "value"), 2, 5);
+    assertThat(rows).hasSize(0);
+  }
+
+  @Test
+  void testTooBigLimitWithOffset() {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final var rows = ListQuery.list(dataframe, List.of("id", "value"), 5, 2);
+    assertThat(rows).hasSize(1);
+  }
+
+  @Test
   void testListWithCondition() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
     final var rows = ListQuery.list(dataframe, new EqualCondition("id", 3));
-    System.out.println(rows);
     assertThat(rows).hasSize(1).extracting(rowReader("value")).first().isEqualTo(-420d);
   }
 
@@ -86,6 +128,13 @@ class TestListQuery {
                 new NotCondition(
                     OrCondition.of(new EqualCondition("id", 1), new NullCondition("value")))));
     assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(2);
+  }
+
+  @Test
+  void testListWithFalseCondition() {
+    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final var rows = ListQuery.list(dataframe, FalseCondition.value());
+    assertThat(rows).isEmpty();
   }
 
   static Object readRowValue(final Row row, final String column) {
