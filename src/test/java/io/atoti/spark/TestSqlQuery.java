@@ -23,6 +23,11 @@ class TestSqlQuery {
 
   public TestSqlQuery() {
     spark.sparkContext().setLogLevel("ERROR");
+
+	registerCsvAsSqlView("csv/basic.csv", "basic");
+	registerCsvAsSqlView("csv/calculate.csv", "calculate");
+	registerCsvAsSqlView("csv/toJoin.csv", "toJoin");
+	registerCsvAsSqlView("csv/twoTypesInSameColumn.csv", "twoTypesInSameColumn");
   }
   
  private static void registerCsvAsSqlView(String fileName, String tableName) {
@@ -32,7 +37,6 @@ class TestSqlQuery {
 
   @Test
   void testListAllDataFrame() {
-	registerCsvAsSqlView("csv/basic.csv", "basic");
     final List<Row> rows = ListQuery.listSql(spark, "basic", List.of("id", "value"), -1, 0);
     assertThat(rows).hasSize(3);
     final var valuesById =
