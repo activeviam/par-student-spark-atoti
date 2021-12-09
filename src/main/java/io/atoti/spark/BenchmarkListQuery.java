@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Benchmark)
 @Fork(value=1, jvmArgs={"--enable-preview", "--illegal-access=permit"})
 public class BenchmarkListQuery {
-
     SparkSession spark;
     Dataset<Row> dataframe;
     int limit;
