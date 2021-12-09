@@ -78,20 +78,6 @@ class TestSqlQuery {
     assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(2);
   }
 
-
-  @Test
-  void testListWithComplexCondition() {
-    final var rows =
-        ListQuery.listSql(
-            spark,
-            "basic",
-            AndCondition.of(
-                new EqualCondition("label", "a"),
-                new NotCondition(
-                    OrCondition.of(new EqualCondition("id", 1), new NullCondition("value")))));
-    assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(2);
-  }
-
   @Test
   void testBasicAggregation() {
     final var rows =
@@ -131,7 +117,11 @@ class TestSqlQuery {
   void testAggregateWithCondition() {
     final var rows =
         AggregateQuery.aggregateSql(
-                spark, "basic", List.of("id"), List.of(new Count("c")), new EqualCondition("label", "a"))
+                spark,
+                "basic",
+                List.of("id"),
+                List.of(new Count("c")),
+                new EqualCondition("label", "a"))
             .collectAsList();
 
     // result must have 2 values
