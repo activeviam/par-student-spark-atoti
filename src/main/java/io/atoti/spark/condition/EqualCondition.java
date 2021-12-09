@@ -12,6 +12,6 @@ public record EqualCondition(String column, Object value) implements QueryCondit
 
   @Override
   public String toSqlQuery() {
-    return "\"" + this.column + "\" = " + this.value;
+    return this.column + " = " + "\"" + this.value + "\"";
   }
 }

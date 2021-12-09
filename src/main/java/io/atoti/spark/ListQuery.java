@@ -63,12 +63,16 @@ public class ListQuery {
   public static List<Row> listSql(SparkSession spark, String table, List<String> wantedColumns, int limit, int offset) {
 	  String wantedColumnsSqlStatement = wantedColumns.isEmpty() ? "*" :  String.join(", ", wantedColumns);
 	  String limitStatement = limit >= 0 ? " LIMIT " + limit + " " : "";
-    return spark
-        .sql("SELECT " + wantedColumnsSqlStatement + " FROM " + table + limitStatement + ";")
+	  String query = "SELECT " + wantedColumnsSqlStatement + " FROM " + table + limitStatement + ";";
+    System.out.println(query);
+	  return spark
+        .sql(query)
         .collectAsList();
   }
 
   public static List<Row> listSql(SparkSession spark, String table, QueryCondition condition) {
-    return spark.sql("SELECT * FROM " + table + " WHERE " + condition.toSqlQuery() + ";").collectAsList();
+	  String query = "SELECT * FROM " + table + " WHERE " + condition.toSqlQuery() + ";";
+	  System.out.println(query);
+	  return spark.sql(query).collectAsList();
   }
 }
