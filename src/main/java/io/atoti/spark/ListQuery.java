@@ -60,19 +60,29 @@ public class ListQuery {
     return dataframe.select(columns).collectAsList();
   }
 
-  public static List<Row> listSql(SparkSession spark, String table, List<String> wantedColumns, int limit, int offset) {
-	  String wantedColumnsSqlStatement = wantedColumns.isEmpty() ? "*" :  String.join(", ", wantedColumns);
-	  String limitStatement = limit >= 0 ? " LIMIT " + limit + " " : "";
-	  String query = "SELECT " + wantedColumnsSqlStatement + " FROM " + table + limitStatement + ";";
-    System.out.println(query);
-	  return spark
-        .sql(query)
+  public static List<Row> listSql(
+      SparkSession spark, String table, List<String> wantedColumns, int limit, int offset) {
+    String wantedColumnsStatement =
+        wantedColumns.isEmpty() ? "*" : String.join(", ", wantedColumns);
+    String limitStatement = limit >= 0 ? " LIMIT " + limit + " " : "";
+    String tableStatement =
+        offset > 0
+            ? "(SELECT * FROM "
+                + table
+                + " WHERE monotonically_increasing_id() >= "
+                + offset
+                + " LIMIT "
+                + limit
+                + ")"
+            : table;
+    return spark
+        .sql("SELECT " + wantedColumnsStatement + " FROM " + tableStatement + limitStatement + ";")
         .collectAsList();
   }
 
   public static List<Row> listSql(SparkSession spark, String table, QueryCondition condition) {
-	  String query = "SELECT * FROM " + table + " WHERE " + condition.toSqlQuery() + ";";
-	  System.out.println(query);
-	  return spark.sql(query).collectAsList();
+    return spark
+        .sql("SELECT * FROM " + table + " WHERE " + condition.toSqlQuery() + ";")
+        .collectAsList();
   }
 }

@@ -12,6 +12,6 @@ public record NullCondition(String fieldName) implements QueryCondition {
 
   @Override
   public String toSqlQuery() {
-    return "NULL";
+    return this.fieldName + " IS NULL";
   }
 }

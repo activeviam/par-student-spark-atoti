@@ -33,8 +33,8 @@ public record AndCondition(List<QueryCondition> conditions) implements QueryCond
 
   @Override
   public String toSqlQuery() {
-	var conditionsSql = this.conditions.stream()
-	        .map((condition) -> "(" + condition.toSqlQuery() + ")").toArray(String[]::new);
-    return String.join(" AND ", conditionsSql);
+    return String.join(
+        " AND ",
+        this.conditions.stream().map((condition) -> "(" + condition.toSqlQuery() + ")").toList());
   }
 }

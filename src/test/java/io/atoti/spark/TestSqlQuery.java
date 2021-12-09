@@ -28,16 +28,16 @@ class TestSqlQuery {
   public TestSqlQuery() {
     spark.sparkContext().setLogLevel("ERROR");
 
-	registerCsvAsSqlView("csv/basic.csv", "basic");
-	registerCsvAsSqlView("csv/calculate.csv", "calculate");
-	registerCsvAsSqlView("csv/toJoin.csv", "toJoin");
-	registerCsvAsSqlView("csv/twoTypesInSameColumn.csv", "twoTypesInSameColumn");
+    registerCsvAsSqlView("csv/basic.csv", "basic");
+    registerCsvAsSqlView("csv/calculate.csv", "calculate");
+    registerCsvAsSqlView("csv/toJoin.csv", "toJoin");
+    registerCsvAsSqlView("csv/twoTypesInSameColumn.csv", "twoTypesInSameColumn");
   }
-  
- private static void registerCsvAsSqlView(String fileName, String tableName) {
-	 final Dataset<Row> dataframe = CsvReader.read(fileName, spark);
-	 dataframe.createOrReplaceTempView(tableName);
- }
+
+  private static void registerCsvAsSqlView(String fileName, String tableName) {
+    final Dataset<Row> dataframe = CsvReader.read(fileName, spark);
+    dataframe.createOrReplaceTempView(tableName);
+  }
 
   @Test
   void testListAllDataFrame() {
@@ -51,7 +51,20 @@ class TestSqlQuery {
                     row -> ((Number) readRowValue(row, "value")).doubleValue()));
     assertThat(valuesById).containsExactlyEntriesOf(Map.of(1L, 12.34d, 2L, 13.57d, 3L, -420d));
   }
-  
+
+  @Test
+  void testListLastRow() {
+    final var rows = ListQuery.listSql(spark, "basic", List.of("id", "value"), 1, 2);
+    assertThat(rows).hasSize(1);
+    final var valuesById =
+        rows.stream()
+            .collect(
+                Collectors.toUnmodifiableMap(
+                    row -> ((Number) readRowValue(row, "id")).longValue(),
+                    row -> ((Number) readRowValue(row, "value")).doubleValue()));
+    assertThat(valuesById).containsExactlyEntriesOf(Map.of(3L, -420d));
+  }
+
   @Test
   void testListWithComplexCondition() {
     final var rows =
@@ -64,7 +77,21 @@ class TestSqlQuery {
                     OrCondition.of(new EqualCondition("id", 1), new NullCondition("value")))));
     assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(2);
   }
-  
+
+
+  @Test
+  void testListWithComplexCondition() {
+    final var rows =
+        ListQuery.listSql(
+            spark,
+            "basic",
+            AndCondition.of(
+                new EqualCondition("label", "a"),
+                new NotCondition(
+                    OrCondition.of(new EqualCondition("id", 1), new NullCondition("value")))));
+    assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(2);
+  }
+
   @Test
   void testBasicAggregation() {
     final var rows =
@@ -121,56 +148,7 @@ class TestSqlQuery {
     final var row2 = rowsById.get(2);
     assertThat((long) row2.getAs("c")).isEqualTo(1);
   }
-  
-//  @Test
-//  void testListFirstRows() {
-//    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
-//    final var rows = ListQuery.list(dataframe, List.of("id", "value"), 2, 0);
-//    assertThat(rows).hasSize(2);
-//    final var valuesById =
-//        rows.stream()
-//            .collect(
-//                Collectors.toUnmodifiableMap(
-//                    row -> ((Number) readRowValue(row, "id")).longValue(),
-//                    row -> ((Number) readRowValue(row, "value")).doubleValue()));
-//    assertThat(valuesById).containsExactlyEntriesOf(Map.of(1L, 12.34d, 2L, 13.57d));
-//  }
-//
-//  @Test
-//  void testListLastRow() {
-//    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
-//    final var rows = ListQuery.list(dataframe, List.of("id", "value"), 1, 2);
-//    assertThat(rows).hasSize(1);
-//    final var valuesById =
-//        rows.stream()
-//            .collect(
-//                Collectors.toUnmodifiableMap(
-//                    row -> ((Number) readRowValue(row, "id")).longValue(),
-//                    row -> ((Number) readRowValue(row, "value")).doubleValue()));
-//    assertThat(valuesById).containsExactlyEntriesOf(Map.of(3L, -420d));
-//  }
-//
-//  @Test
-//  void testListWithCondition() {
-//    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
-//    final var rows = ListQuery.list(dataframe, new EqualCondition("id", 3));
-//    System.out.println(rows);
-//    assertThat(rows).hasSize(1).extracting(rowReader("value")).first().isEqualTo(-420d);
-//  }
-//
-//  @Test
-//  void testListWithComplexCondition() {
-//    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
-//    final var rows =
-//        ListQuery.list(
-//            dataframe,
-//            AndCondition.of(
-//                new EqualCondition("label", "a"),
-//                new NotCondition(
-//                    OrCondition.of(new EqualCondition("id", 1), new NullCondition("value")))));
-//    assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(2);
-//  }
-//
+
   static Object readRowValue(final Row row, final String column) {
     return row.getAs(column);
   }
