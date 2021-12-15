@@ -1,5 +1,6 @@
 package io.atoti.spark;
 
+import io.atoti.spark.aggregation.*;
 import io.atoti.spark.condition.EqualCondition;
 import io.atoti.spark.condition.QueryCondition;
 import org.apache.spark.sql.*;
@@ -22,6 +23,8 @@ public class BenchmarkSparkSql {
     int offset;
     List<String> wantedColumns;
     QueryCondition condition;
+    List<String> groupByColumns;
+    List<AggregatedValue> aggregation;
 
     public static void main(String[] args) throws Exception {
         Options opt = new OptionsBuilder()
@@ -40,6 +43,8 @@ public class BenchmarkSparkSql {
         offset = 100000;
         wantedColumns = List.of("ID", "Severity");
         condition = new EqualCondition("Severity", 4);
+        groupByColumns = List.of("Severity");
+        aggregation = List.of(new Count("severity_count"));
         dataframe.createOrReplaceTempView(tableName);
     }
 
@@ -80,6 +85,28 @@ public class BenchmarkSparkSql {
     @Measurement(iterations = 10)
     public void benchmarkSparkSqlListCondition(Blackhole bh) {
         final List<Row> rows = ListQuery.listSql(spark, tableName, condition);
+        bh.consume(rows);
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.SingleShotTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 3)
+    @Measurement(iterations = 10)
+    public void benchmarkSparkApiAggregation(Blackhole bh) {
+        final Dataset<Row> rows = AggregateQuery.aggregate(dataframe, groupByColumns, aggregation);
+        rows.show(); // mandatory to trigger the computation of the dataset
+        bh.consume(rows);
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.SingleShotTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 3)
+    @Measurement(iterations = 10)
+    public void benchmarkSparkSqlAggregation(Blackhole bh) {
+        final Dataset<Row> rows = AggregateQuery.aggregateSql(spark, tableName, groupByColumns, aggregation);
+        rows.show(); // mandatory to trigger the computation of the dataset
         bh.consume(rows);
     }
 }
