@@ -1,5 +1,7 @@
 package io.atoti.spark;
 
+import io.atoti.spark.condition.EqualCondition;
+import io.atoti.spark.condition.QueryCondition;
 import org.apache.spark.sql.*;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -19,6 +21,7 @@ public class BenchmarkSparkSql {
     int limit;
     int offset;
     List<String> wantedColumns;
+    QueryCondition condition;
 
     public static void main(String[] args) throws Exception {
         Options opt = new OptionsBuilder()
@@ -36,6 +39,7 @@ public class BenchmarkSparkSql {
         limit = 100000;
         offset = 100000;
         wantedColumns = List.of("ID", "Severity");
+        condition = new EqualCondition("Severity", 4);
         dataframe.createOrReplaceTempView(tableName);
     }
 
@@ -44,7 +48,7 @@ public class BenchmarkSparkSql {
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Warmup(iterations = 3)
     @Measurement(iterations = 10)
-    public void benchmarkSparkApi(Blackhole bh) {
+    public void benchmarkSparkApiListLimit(Blackhole bh) {
         final List<Row> rows = ListQuery.list(dataframe, wantedColumns, limit, offset);
         bh.consume(rows);
     }
@@ -54,8 +58,28 @@ public class BenchmarkSparkSql {
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Warmup(iterations = 3)
     @Measurement(iterations = 10)
-    public void benchmarkSparkSql(Blackhole bh) {
+    public void benchmarkSparkSqlListLimit(Blackhole bh) {
         final List<Row> rows = ListQuery.listSql(spark, tableName, wantedColumns, limit, offset);
+        bh.consume(rows);
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.SingleShotTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 3)
+    @Measurement(iterations = 10)
+    public void benchmarkSparkApiListCondition(Blackhole bh) {
+        final List<Row> rows = ListQuery.list(dataframe, condition);
+        bh.consume(rows);
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.SingleShotTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 3)
+    @Measurement(iterations = 10)
+    public void benchmarkSparkSqlListCondition(Blackhole bh) {
+        final List<Row> rows = ListQuery.listSql(spark, tableName, condition);
         bh.consume(rows);
     }
 }
