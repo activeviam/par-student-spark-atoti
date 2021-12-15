@@ -29,5 +29,7 @@ hs_err_pid*
 .project
 .settings
 bin
+/.apt_generated/
+/.apt_generated_tests/
 
 **/csv/US_Accidents*

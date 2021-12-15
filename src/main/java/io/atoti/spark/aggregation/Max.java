@@ -20,4 +20,8 @@ public record Max(String name, String column) implements AggregatedValue {
   public Column toColumn() {
     return col(name);
   }
+
+  public String toSqlQuery() {
+    return "MAX(" + column + ") AS " + name;
+  }
 }

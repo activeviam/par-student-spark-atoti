@@ -9,4 +9,9 @@ public record EqualCondition(String column, Object value) implements QueryCondit
   public FilterFunction<Row> getCondition() {
     return (Row row) -> row.getAs(this.column).equals(this.value);
   }
+
+  @Override
+  public String toSqlQuery() {
+    return this.column + " = \"" + this.value + "\"";
+  }
 }

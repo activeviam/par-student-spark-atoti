@@ -19,4 +19,9 @@ public record TrueCondition() implements QueryCondition {
   public FilterFunction<Row> getCondition() {
     return (Row row) -> (true);
   }
+
+  @Override
+  public String toSqlQuery() {
+    return "true";
+  }
 }

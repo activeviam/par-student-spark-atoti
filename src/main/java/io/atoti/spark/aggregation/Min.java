@@ -20,4 +20,8 @@ public record Min(String name, String column) implements AggregatedValue {
   public Column toColumn() {
     return col(name);
   }
+
+  public String toSqlQuery() {
+    return "MIN(" + column + ") AS " + name;
+  }
 }

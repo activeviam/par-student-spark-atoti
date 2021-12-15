@@ -13,4 +13,6 @@ public sealed interface QueryCondition extends Serializable
         TrueCondition,
         FalseCondition {
   FilterFunction<Row> getCondition();
+
+  String toSqlQuery();
 }

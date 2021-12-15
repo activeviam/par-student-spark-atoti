@@ -9,4 +9,9 @@ public record NotCondition(QueryCondition condition) implements QueryCondition {
   public FilterFunction<Row> getCondition() {
     return (Row row) -> !this.condition.getCondition().call(row);
   }
+
+  @Override
+  public String toSqlQuery() {
+    return "! (" + this.condition.toSqlQuery() + ")";
+  }
 }
