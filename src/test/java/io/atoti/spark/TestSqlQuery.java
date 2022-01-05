@@ -11,8 +11,12 @@ import io.atoti.spark.condition.EqualCondition;
 import io.atoti.spark.condition.NotCondition;
 import io.atoti.spark.condition.NullCondition;
 import io.atoti.spark.condition.OrCondition;
+import io.atoti.spark.join.FieldMapping;
+import io.atoti.spark.join.TableJoin;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.spark.sql.Dataset;
@@ -41,7 +45,8 @@ class TestSqlQuery {
 
   @Test
   void testListAllDataFrame() {
-    final List<Row> rows = ListQuery.listSql(spark, "basic", List.of("id", "value"), -1, 0);
+    final List<Row> rows =
+        ListQuery.listSql(spark, new Table("basic"), List.of("id", "value"), -1, 0);
     assertThat(rows).hasSize(3);
     final var valuesById =
         rows.stream()
@@ -54,7 +59,7 @@ class TestSqlQuery {
 
   @Test
   void testListLastRow() {
-    final var rows = ListQuery.listSql(spark, "basic", List.of("id", "value"), 1, 2);
+    final var rows = ListQuery.listSql(spark, new Table("basic"), List.of("id", "value"), 1, 2);
     assertThat(rows).hasSize(1);
     final var valuesById =
         rows.stream()
@@ -70,12 +75,30 @@ class TestSqlQuery {
     final var rows =
         ListQuery.listSql(
             spark,
-            "basic",
+            new Table("basic"),
             AndCondition.of(
                 new EqualCondition("label", "a"),
                 new NotCondition(
                     OrCondition.of(new EqualCondition("id", 1), new NullCondition("value")))));
     assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(2);
+  }
+
+  @Test
+  void testListWithJointTable() {
+    Set<FieldMapping> fieldMappings = new HashSet<FieldMapping>();
+    fieldMappings.add(new FieldMapping("id", "basic_id"));
+    TableJoin tableJoin = new TableJoin("result", "basic", "toJoin", fieldMappings);
+    final var rows =
+        ListQuery.listSql(
+            spark,
+            tableJoin,
+            AndCondition.of(
+                new EqualCondition("label", "a"),
+                new NotCondition(
+                    OrCondition.of(
+                        new EqualCondition("id", 3), new EqualCondition("join_value", 33)))));
+    System.out.println(rows);
+    assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(1);
   }
 
   @Test
