@@ -13,6 +13,7 @@ import io.atoti.spark.condition.NullCondition;
 import io.atoti.spark.condition.OrCondition;
 import io.atoti.spark.join.FieldMapping;
 import io.atoti.spark.join.TableJoin;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -84,10 +85,10 @@ class TestSqlQuery {
   }
 
   @Test
-  void testListWithJointTable() {
+  void testListWithJoinedTable() {
     Set<FieldMapping> fieldMappings = new HashSet<FieldMapping>();
     fieldMappings.add(new FieldMapping("id", "basic_id"));
-    TableJoin tableJoin = new TableJoin("result", "basic", "toJoin", fieldMappings);
+    TableJoin tableJoin = new TableJoin(new Table("basic"), "toJoin", fieldMappings);
     final var rows =
         ListQuery.listSql(
             spark,
@@ -97,8 +98,26 @@ class TestSqlQuery {
                 new NotCondition(
                     OrCondition.of(
                         new EqualCondition("id", 3), new EqualCondition("join_value", 33)))));
-    System.out.println(rows);
     assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(1);
+  }
+
+  @Test
+  void testListWithSeveralJoinedTables() {
+    Set<FieldMapping> fieldMappings = new HashSet<FieldMapping>();
+    fieldMappings.add(new FieldMapping("basic.id", "toJoin.basic_id"));
+    TableJoin intermediateJoin = new TableJoin(new Table("basic"), "toJoin", fieldMappings);
+
+    Set<FieldMapping> fieldMappings2 = new HashSet<FieldMapping>();
+    fieldMappings2.add(new FieldMapping("toJoin.basic_id", "calculate.id"));
+    TableJoin tableJoin = new TableJoin(intermediateJoin, "calculate", fieldMappings2);
+
+    final var rows =
+        ListQuery.listSql(
+            spark,
+            tableJoin,
+            new EqualCondition("label", "b"));
+    assertThat(rows).hasSize(1).extracting(rowReader("join_value")).first().isEqualTo(0.0);
+    assertThat(rows).extracting(rowReader("val2")).first().isEqualTo(3.14);
   }
 
   @Test
