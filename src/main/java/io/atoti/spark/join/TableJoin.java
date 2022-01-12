@@ -13,9 +13,14 @@ public record TableJoin(
             fieldMappings.stream()
                 .map(
                     (fieldMapping) ->
-                        fieldMapping.sourceField()
+                    	fieldMapping.sourceField()
                             + " = "
-                            + fieldMapping.targetField())
+                            + fieldMapping.targetField()
+                            + " OR ("
+                            + fieldMapping.sourceField()
+                            + " IS NULL AND "
+                            + fieldMapping.targetField()
+                            + " IS NULL)")
                 .toList());
     return sourceTable.toSqlQuery() + "\nJOIN " + targetTableName + " ON " + joinConditions;
   }
