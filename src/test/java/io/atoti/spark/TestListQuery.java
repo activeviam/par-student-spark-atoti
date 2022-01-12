@@ -140,28 +140,35 @@ class TestListQuery {
   @Test
   void testListWithConditionAndLimit() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
-    final var rows = ListQuery.list(dataframe, List.of("id", "value"), new EqualCondition("id", 3), 1, 0);
+    final var rows =
+        ListQuery.list(dataframe, List.of("id", "value"), new EqualCondition("id", 3), 1, 0);
     assertThat(rows).hasSize(1);
     final var valuesById =
-            rows.stream()
-                    .collect(
-                            Collectors.toUnmodifiableMap(
-                                    row -> ((Number) readRowValue(row, "id")).longValue(),
-                                    row -> ((Number) readRowValue(row, "value")).doubleValue()));
+        rows.stream()
+            .collect(
+                Collectors.toUnmodifiableMap(
+                    row -> ((Number) readRowValue(row, "id")).longValue(),
+                    row -> ((Number) readRowValue(row, "value")).doubleValue()));
     assertThat(valuesById).containsExactlyEntriesOf(Map.of(3L, -420d));
   }
 
   @Test
   void testListWithConditionAndOffset() {
     final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
-    final var rows = ListQuery.list(dataframe, List.of("id", "value"), new NotCondition(new EqualCondition("id", 3)), -1, 1);
+    final var rows =
+        ListQuery.list(
+            dataframe,
+            List.of("id", "value"),
+            new NotCondition(new EqualCondition("id", 3)),
+            -1,
+            1);
     assertThat(rows).hasSize(1);
     final var valuesById =
-            rows.stream()
-                    .collect(
-                            Collectors.toUnmodifiableMap(
-                                    row -> ((Number) readRowValue(row, "id")).longValue(),
-                                    row -> ((Number) readRowValue(row, "value")).doubleValue()));
+        rows.stream()
+            .collect(
+                Collectors.toUnmodifiableMap(
+                    row -> ((Number) readRowValue(row, "id")).longValue(),
+                    row -> ((Number) readRowValue(row, "value")).doubleValue()));
     assertThat(valuesById).containsExactlyEntriesOf(Map.of(2L, 13.57d));
   }
 

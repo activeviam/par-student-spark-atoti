@@ -17,7 +17,9 @@ public record AndCondition(List<QueryCondition> conditions) implements QueryCond
 
   @Override
   public Column getCondition() {
-	  return this.conditions.stream().map(QueryCondition::getCondition).reduce(TrueCondition.value().getCondition(), (Column a, Column b) -> a.$amp$amp(b));
+    return this.conditions.stream()
+        .map(QueryCondition::getCondition)
+        .reduce(TrueCondition.value().getCondition(), (Column a, Column b) -> a.$amp$amp(b));
   }
 
   @Override

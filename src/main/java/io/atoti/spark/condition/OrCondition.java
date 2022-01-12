@@ -17,8 +17,10 @@ public record OrCondition(List<QueryCondition> conditions) implements QueryCondi
 
   @Override
   public Column getCondition() {
-	  return this.conditions.stream().map(QueryCondition::getCondition).reduce(FalseCondition.value().getCondition(), (Column a, Column b) -> a.$bar$bar(b));
-}
+    return this.conditions.stream()
+        .map(QueryCondition::getCondition)
+        .reduce(FalseCondition.value().getCondition(), (Column a, Column b) -> a.$bar$bar(b));
+  }
 
   @Override
   public String toSqlQuery() {
