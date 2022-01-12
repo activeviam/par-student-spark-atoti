@@ -28,7 +28,7 @@ class TestListQuery {
 
   @Test
   void testListAllDataFrame() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final List<Row> rows = ListQuery.list(dataframe, List.of("id", "value"), -1, 0);
     assertThat(rows).hasSize(3);
     final var valuesById =
@@ -42,7 +42,7 @@ class TestListQuery {
 
   @Test
   void testListFirstRows() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 2, 0);
     assertThat(rows).hasSize(2);
     final var valuesById =
@@ -56,7 +56,7 @@ class TestListQuery {
 
   @Test
   void testListLastRow() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 1, 2);
     assertThat(rows).hasSize(1);
     final var valuesById =
@@ -70,56 +70,56 @@ class TestListQuery {
 
   @Test
   void testNoRow() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 0, 0);
     assertThat(rows).hasSize(0);
   }
 
   @Test
   void testTooBigLimit() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 5, 0);
     assertThat(rows).hasSize(3);
   }
 
   @Test
   void testTooBigOffset() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), -1, 5);
     assertThat(rows).hasSize(0);
   }
 
   @Test
   void testNegativeOffset() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     assertThatThrownBy(() -> ListQuery.list(dataframe, List.of("id", "value"), 3, -2))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void testTooBigOffsetWithLimit() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 2, 5);
     assertThat(rows).hasSize(0);
   }
 
   @Test
   void testTooBigLimitWithOffset() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), 5, 2);
     assertThat(rows).hasSize(1);
   }
 
   @Test
   void testListWithCondition() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows = ListQuery.list(dataframe, new EqualCondition("id", 3));
     assertThat(rows).hasSize(1).extracting(rowReader("value")).first().isEqualTo(-420d);
   }
 
   @Test
   void testListWithComplexCondition() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows =
         ListQuery.list(
             dataframe,
@@ -132,14 +132,14 @@ class TestListQuery {
 
   @Test
   void testListWithFalseCondition() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows = ListQuery.list(dataframe, FalseCondition.value());
     assertThat(rows).isEmpty();
   }
 
   @Test
   void testListWithConditionAndLimit() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), new EqualCondition("id", 3), 1, 0);
     assertThat(rows).hasSize(1);
     final var valuesById =
@@ -153,7 +153,7 @@ class TestListQuery {
 
   @Test
   void testListWithConditionAndOffset() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows = ListQuery.list(dataframe, List.of("id", "value"), new NotCondition(new EqualCondition("id", 3)), -1, 1);
     assertThat(rows).hasSize(1);
     final var valuesById =

@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
@@ -27,16 +26,6 @@ class TestSqlQuery {
 
   public TestSqlQuery() {
     spark.sparkContext().setLogLevel("ERROR");
-
-    registerCsvAsSqlView("csv/basic.csv", "basic");
-    registerCsvAsSqlView("csv/calculate.csv", "calculate");
-    registerCsvAsSqlView("csv/toJoin.csv", "toJoin");
-    registerCsvAsSqlView("csv/twoTypesInSameColumn.csv", "twoTypesInSameColumn");
-  }
-
-  private static void registerCsvAsSqlView(String fileName, String tableName) {
-    final Dataset<Row> dataframe = CsvReader.read(fileName, spark);
-    dataframe.createOrReplaceTempView(tableName);
   }
 
   @Test

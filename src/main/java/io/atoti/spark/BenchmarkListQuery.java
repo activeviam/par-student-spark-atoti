@@ -31,7 +31,7 @@ public class BenchmarkListQuery {
     public void setup() {
         spark = SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
         spark.sparkContext().setLogLevel("ERROR");
-        dataframe = CsvReader.read("csv/US_accidents_Dec20_updated.csv", spark, ",");
+        dataframe = spark.read().table("us_accidents_dec20_updated_csv");
         limit = 100000;
         offset = 100000;
         wantedColumns = List.of("ID", "Severity");

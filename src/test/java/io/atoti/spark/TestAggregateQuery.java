@@ -26,7 +26,7 @@ class TestAggregateQuery {
 
   @Test
   void testBasicAggregation() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows =
         AggregateQuery.aggregate(
                 dataframe,
@@ -61,7 +61,7 @@ class TestAggregateQuery {
 
   @Test
   void testWithEmptyGroupBy() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows =
         AggregateQuery.aggregate(
                 dataframe,
@@ -80,7 +80,7 @@ class TestAggregateQuery {
 
   @Test
   void testListWithCondition() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows =
         AggregateQuery.aggregate(
                 dataframe, List.of("id"), List.of(new Count("c")), new EqualCondition("label", "a"))
@@ -103,7 +103,7 @@ class TestAggregateQuery {
 
   @Test
   void testWithEmptyAggregationsList() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     assertThatThrownBy(
             () ->
                 AggregateQuery.aggregate(
