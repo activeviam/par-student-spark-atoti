@@ -13,7 +13,6 @@ import io.atoti.spark.condition.NullCondition;
 import io.atoti.spark.condition.OrCondition;
 import io.atoti.spark.join.FieldMapping;
 import io.atoti.spark.join.TableJoin;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -111,11 +110,7 @@ class TestSqlQuery {
     fieldMappings2.add(new FieldMapping("toJoin.basic_id", "calculate.id"));
     TableJoin tableJoin = new TableJoin(intermediateJoin, "calculate", fieldMappings2);
 
-    final var rows =
-        ListQuery.listSql(
-            spark,
-            tableJoin,
-            new EqualCondition("label", "b"));
+    final var rows = ListQuery.listSql(spark, tableJoin, new EqualCondition("label", "b"));
     assertThat(rows).hasSize(1).extracting(rowReader("join_value")).first().isEqualTo(0.0);
     assertThat(rows).extracting(rowReader("val2")).first().isEqualTo(3.14);
   }

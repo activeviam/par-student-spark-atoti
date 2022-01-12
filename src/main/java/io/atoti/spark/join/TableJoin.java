@@ -13,7 +13,7 @@ public record TableJoin(
             fieldMappings.stream()
                 .map(
                     (fieldMapping) ->
-                    	fieldMapping.sourceField()
+                        fieldMapping.sourceField()
                             + " = "
                             + fieldMapping.targetField()
                             + " OR ("
