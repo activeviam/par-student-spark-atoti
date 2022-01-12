@@ -71,8 +71,6 @@ public class ListQuery {
                 + table
                 + " WHERE monotonically_increasing_id() >= "
                 + offset
-                + " LIMIT "
-                + limit
                 + ")"
             : table;
     return spark
