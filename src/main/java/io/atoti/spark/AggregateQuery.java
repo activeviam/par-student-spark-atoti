@@ -84,7 +84,6 @@ public class AggregateQuery {
             + " GROUP BY "
             + String.join(", ", groupByColumns)
             + ";";
-    System.out.println(query);
     return spark.sql(query);
   }
 }

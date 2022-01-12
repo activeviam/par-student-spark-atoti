@@ -64,7 +64,8 @@ public class BenchmarkSparkSql {
   @Warmup(iterations = 3)
   @Measurement(iterations = 10)
   public void benchmarkSparkSqlListLimit(Blackhole bh) {
-    final List<Row> rows = ListQuery.listSql(spark, tableName, wantedColumns, limit, offset);
+    final List<Row> rows =
+        ListQuery.listSql(spark, new Table(tableName), wantedColumns, limit, offset);
     bh.consume(rows);
   }
 
@@ -84,7 +85,7 @@ public class BenchmarkSparkSql {
   @Warmup(iterations = 3)
   @Measurement(iterations = 10)
   public void benchmarkSparkSqlListCondition(Blackhole bh) {
-    final List<Row> rows = ListQuery.listSql(spark, tableName, condition);
+    final List<Row> rows = ListQuery.listSql(spark, new Table(tableName), condition);
     bh.consume(rows);
   }
 

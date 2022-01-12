@@ -67,22 +67,26 @@ public class ListQuery {
   }
 
   public static List<Row> listSql(
-      SparkSession spark, String table, List<String> wantedColumns, int limit, int offset) {
+      SparkSession spark, Queryable table, List<String> wantedColumns, int limit, int offset) {
     String wantedColumnsStatement =
         wantedColumns.isEmpty() ? "*" : String.join(", ", wantedColumns);
     String limitStatement = limit >= 0 ? " LIMIT " + limit + " " : "";
     String tableStatement =
         offset > 0
-            ? "(SELECT * FROM " + table + " WHERE monotonically_increasing_id() >= " + offset + ")"
-            : table;
+            ? "(SELECT * FROM "
+                + table.toSqlQuery()
+                + " WHERE monotonically_increasing_id() >= "
+                + offset
+                + ")"
+            : table.toSqlQuery();
     return spark
         .sql("SELECT " + wantedColumnsStatement + " FROM " + tableStatement + limitStatement + ";")
         .collectAsList();
   }
 
-  public static List<Row> listSql(SparkSession spark, String table, QueryCondition condition) {
+  public static List<Row> listSql(SparkSession spark, Queryable table, QueryCondition condition) {
     return spark
-        .sql("SELECT * FROM " + table + " WHERE " + condition.toSqlQuery() + ";")
+        .sql("SELECT * FROM " + table.toSqlQuery() + " WHERE " + condition.toSqlQuery() + ";")
         .collectAsList();
   }
 }
