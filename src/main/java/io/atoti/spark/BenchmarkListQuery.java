@@ -15,27 +15,28 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
     value = 1,
     jvmArgs = {"--enable-preview", "--illegal-access=permit"})
 public class BenchmarkListQuery {
-  SparkSession spark;
-  Dataset<Row> dataframe;
-  int limit;
-  int offset;
-  List<String> wantedColumns;
+    SparkSession spark;
+    Dataset<Row> dataframe;
+    int limit;
+    int offset;
+    List<String> wantedColumns;
 
-  public static void main(String[] args) throws Exception {
-    Options opt = new OptionsBuilder().include(BenchmarkListQuery.class.getSimpleName()).build();
-    new Runner(opt).run();
-  }
+    public static void main(String[] args) throws Exception {
+        Options opt = new OptionsBuilder()
+                .include(BenchmarkListQuery.class.getSimpleName())
+                .build();
+        new Runner(opt).run();
+    }
 
-  @Setup()
-  public void setup() {
-    spark =
-        SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
-    spark.sparkContext().setLogLevel("ERROR");
-    dataframe = CsvReader.read("csv/US_accidents_Dec20_updated.csv", spark, ",");
-    limit = 100000;
-    offset = 100000;
-    wantedColumns = List.of("ID", "Severity");
-  }
+    @Setup()
+    public void setup() {
+        spark = SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+        spark.sparkContext().setLogLevel("ERROR");
+        dataframe = spark.read().table("us_accidents_dec20_updated_csv");
+        limit = 100000;
+        offset = 100000;
+        wantedColumns = List.of("ID", "Severity");
+    }
 
   @Benchmark
   @BenchmarkMode(Mode.SingleShotTime)

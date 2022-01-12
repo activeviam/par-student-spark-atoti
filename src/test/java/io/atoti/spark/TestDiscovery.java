@@ -17,7 +17,7 @@ public class TestDiscovery {
 
   @Test
   void testDiscoveryBasis() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
     assertThat(dataframe).isNotNull();
@@ -35,8 +35,7 @@ public class TestDiscovery {
 
   @Test
   void testDiscoveryTwoTypesInSameColumn() {
-
-    final Dataset<Row> dataframe = CsvReader.read("csv/twoTypesInSameColumn.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("twotypesinsamecolumn");
     final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
     assertThat(dataframe).isNotNull();
@@ -54,9 +53,8 @@ public class TestDiscovery {
 
   @Test
   void testDiscoveryJoin() {
-
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
-    final Dataset<Row> dataframeToJoin = CsvReader.read("csv/toJoin.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
+    final Dataset<Row> dataframeToJoin = spark.read().table("tojoin");
 
     final Dataset<Row> dataframeJoin =
         dataframe.join(
@@ -85,8 +83,7 @@ public class TestDiscovery {
 
   @Test
   void testDiscoveryCalculate() {
-
-    Dataset<Row> dataframe = CsvReader.read("csv/calculate.csv", spark);
+    Dataset<Row> dataframe = spark.read().table("calculate");
     dataframe =
         dataframe
             .withColumn("val1_minus_val2", dataframe.col("val1").minus(dataframe.col("val2")))
