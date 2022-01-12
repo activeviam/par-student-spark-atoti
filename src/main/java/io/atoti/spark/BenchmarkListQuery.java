@@ -26,10 +26,6 @@ public class BenchmarkListQuery {
     new Runner(opt).run();
   }
 
-  public static void main(String[] args) throws Exception {
-    org.openjdk.jmh.Main.main(args);
-  }
-
   @Setup()
   public void setup() {
     spark =
