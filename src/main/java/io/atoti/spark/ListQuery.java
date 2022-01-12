@@ -43,13 +43,19 @@ public class ListQuery {
     return dataframe.filter(condition.getCondition()).collectAsList();
   }
 
-  public static List<Row> list(Dataset<Row> dataframe, List<String> wantedColumns, QueryCondition condition, int limit, int offset) {
+  public static List<Row> list(
+      Dataset<Row> dataframe,
+      List<String> wantedColumns,
+      QueryCondition condition,
+      int limit,
+      int offset) {
     if (offset < 0) {
       throw new IllegalArgumentException("Cannot accept a negative offset");
     }
 
     final Column[] columns = wantedColumns.stream().map(functions::col).toArray(Column[]::new);
-    dataframe = dataframe.filter(condition.getCondition()).withColumn("_id", monotonically_increasing_id());
+    dataframe =
+        dataframe.filter(condition.getCondition()).withColumn("_id", monotonically_increasing_id());
 
     if (limit < 0) {
       dataframe = dataframe.where(dataframe.col("_id").geq(offset));
@@ -61,26 +67,26 @@ public class ListQuery {
   }
 
   public static List<Row> listSql(
-      SparkSession spark, String table, List<String> wantedColumns, int limit, int offset) {
+      SparkSession spark, Queryable table, List<String> wantedColumns, int limit, int offset) {
     String wantedColumnsStatement =
         wantedColumns.isEmpty() ? "*" : String.join(", ", wantedColumns);
     String limitStatement = limit >= 0 ? " LIMIT " + limit + " " : "";
     String tableStatement =
         offset > 0
             ? "(SELECT * FROM "
-                + table
+                + table.toSqlQuery()
                 + " WHERE monotonically_increasing_id() >= "
                 + offset
                 + ")"
-            : table;
+            : table.toSqlQuery();
     return spark
         .sql("SELECT " + wantedColumnsStatement + " FROM " + tableStatement + limitStatement + ";")
         .collectAsList();
   }
 
-  public static List<Row> listSql(SparkSession spark, String table, QueryCondition condition) {
+  public static List<Row> listSql(SparkSession spark, Queryable table, QueryCondition condition) {
     return spark
-        .sql("SELECT * FROM " + table + " WHERE " + condition.toSqlQuery() + ";")
+        .sql("SELECT * FROM " + table.toSqlQuery() + " WHERE " + condition.toSqlQuery() + ";")
         .collectAsList();
   }
 }
