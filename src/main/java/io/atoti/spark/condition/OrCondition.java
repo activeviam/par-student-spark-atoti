@@ -1,8 +1,7 @@
 package io.atoti.spark.condition;
 
 import java.util.List;
-import org.apache.spark.api.java.function.FilterFunction;
-import org.apache.spark.sql.Row;
+import org.apache.spark.sql.Column;
 
 public record OrCondition(List<QueryCondition> conditions) implements QueryCondition {
 
@@ -17,19 +16,9 @@ public record OrCondition(List<QueryCondition> conditions) implements QueryCondi
   }
 
   @Override
-  public FilterFunction<Row> getCondition() {
-    return (Row row) ->
-        this.conditions.stream()
-            .anyMatch(
-                (condition) -> {
-                  final var filterFunction = condition.getCondition();
-                  try {
-                    return filterFunction.call(row);
-                  } catch (Exception e) {
-                    throw new IllegalStateException("Failed to execute condition " + condition, e);
-                  }
-                });
-  }
+  public Column getCondition() {
+	  return this.conditions.stream().map(QueryCondition::getCondition).reduce(FalseCondition.value().getCondition(), (Column a, Column b) -> a.$bar$bar(b));
+}
 
   @Override
   public String toSqlQuery() {
