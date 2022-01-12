@@ -73,13 +73,7 @@ public class ListQuery {
     String limitStatement = limit >= 0 ? " LIMIT " + limit + " " : "";
     String tableStatement =
         offset > 0
-            ? "(SELECT * FROM "
-                + table
-                + " WHERE monotonically_increasing_id() >= "
-                + offset
-                + " LIMIT "
-                + limit
-                + ")"
+            ? "(SELECT * FROM " + table + " WHERE monotonically_increasing_id() >= " + offset + ")"
             : table;
     return spark
         .sql("SELECT " + wantedColumnsStatement + " FROM " + tableStatement + limitStatement + ";")
