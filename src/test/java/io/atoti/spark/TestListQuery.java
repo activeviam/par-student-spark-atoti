@@ -24,6 +24,7 @@ class TestListQuery {
 
   public TestListQuery() {
     this.spark.sparkContext().setLogLevel("ERROR");
+    // spark.sparkContext().addJar("./out/artifacts/condition/condition.jar");
   }
 
   @Test
