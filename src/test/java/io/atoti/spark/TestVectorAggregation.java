@@ -71,16 +71,25 @@ public class TestVectorAggregation {
                 List.of(
                     new Quantile("v95%", revenues, 95f), new QuantileIndex("i95%", revenues, 95f)))
             .collectAsList();
+    final var compareByV95 = Comparator.<Row>comparingDouble(row -> row.getDouble(0));
     final int bestSimulation =
         rows.stream()
-            .sorted(Comparator.<Row>comparingDouble(row -> row.getDouble(0)).reversed())
+            .sorted(compareByV95.reversed())
+            .mapToInt(row -> row.getInt(0))
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("No data to look at"));
+    final int worstSimulation =
+        rows.stream()
+            .sorted(compareByV95)
             .mapToInt(row -> row.getInt(0))
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("No data to look at"));
     AggregateQuery.aggregate(
             dataframe,
             List.of("simulation"),
-            List.of(new VectorAt("one-revenue", revenues, bestSimulation)))
+            List.of(
+                new VectorAt("revenue-at-best", revenues, bestSimulation),
+                new VectorAt("revenue-at-worst", revenues, worstSimulation)))
         .collectAsList();
   }
 }
