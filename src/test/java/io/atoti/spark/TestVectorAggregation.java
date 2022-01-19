@@ -6,12 +6,12 @@
  */
 package io.atoti.spark;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import io.atoti.spark.aggregation.Count;
 import io.atoti.spark.aggregation.Multiply;
+import io.atoti.spark.aggregation.Quantile;
+import io.atoti.spark.aggregation.QuantileIndex;
 import io.atoti.spark.aggregation.Sum;
-import io.atoti.spark.condition.EqualCondition;
+import io.atoti.spark.aggregation.VectorAt;
+import java.util.Comparator;
 import java.util.List;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -38,6 +38,49 @@ public class TestVectorAggregation {
                     "f * vector",
                     new Sum("f", "factor-field"),
                     new Sum("sum(vector)", "vector-field"))))
+        .collectAsList();
+  }
+
+  @Test
+  void vectorQuantile() {
+    final Dataset<Row> dataframe = null;
+    AggregateQuery.aggregate(
+            dataframe,
+            List.of("simulation"),
+            List.of(
+                new QuantileIndex(
+                    "i95%",
+                    new Multiply(
+                        "f * vector",
+                        new Sum("f", "factor-field"),
+                        new Sum("sum(vector)", "vector-field")),
+                    95f)))
+        .collectAsList();
+  }
+
+  @Test
+  void simulationExplorationAtQuantile() {
+    final Dataset<Row> dataframe = null;
+    final var revenues =
+        new Multiply(
+            "f * vector", new Sum("f", "factor-field"), new Sum("sum(vector)", "vector-field"));
+    final List<Row> rows =
+        AggregateQuery.aggregate(
+                dataframe,
+                List.of("simulation"),
+                List.of(
+                    new Quantile("v95%", revenues, 95f), new QuantileIndex("i95%", revenues, 95f)))
+            .collectAsList();
+    final int bestSimulation =
+        rows.stream()
+            .sorted(Comparator.<Row>comparingDouble(row -> row.getDouble(0)).reversed())
+            .mapToInt(row -> row.getInt(0))
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("No data to look at"));
+    AggregateQuery.aggregate(
+            dataframe,
+            List.of("simulation"),
+            List.of(new VectorAt("one-revenue", revenues, bestSimulation)))
         .collectAsList();
   }
 }
