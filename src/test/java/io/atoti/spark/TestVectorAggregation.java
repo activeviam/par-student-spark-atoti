@@ -84,9 +84,10 @@ public class TestVectorAggregation {
             .mapToInt(row -> row.getInt(0))
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("No data to look at"));
+    // Study the chosen simulations on the prices per category
     AggregateQuery.aggregate(
             dataframe,
-            List.of("simulation"),
+            List.of("category"),
             List.of(
                 new VectorAt("revenue-at-best", revenues, bestSimulation),
                 new VectorAt("revenue-at-worst", revenues, worstSimulation)))
