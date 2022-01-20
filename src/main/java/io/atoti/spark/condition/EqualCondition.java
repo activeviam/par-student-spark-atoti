@@ -1,13 +1,20 @@
 package io.atoti.spark.condition;
 
-import org.apache.spark.api.java.function.FilterFunction;
-import org.apache.spark.sql.Row;
+import org.apache.spark.sql.Column;
+import org.apache.spark.sql.functions;
 
-public record EqualCondition(String column, Object value) implements QueryCondition {
+public class EqualCondition implements QueryCondition {
+  String column;
+  Object value;
+
+  public EqualCondition(String column, Object value) {
+    this.column = column;
+    this.value = value;
+  }
 
   @Override
-  public FilterFunction<Row> getCondition() {
-    return (Row row) -> row.getAs(this.column).equals(this.value);
+  public Column getCondition() {
+    return functions.col(column).$eq$eq$eq(value);
   }
 
   @Override

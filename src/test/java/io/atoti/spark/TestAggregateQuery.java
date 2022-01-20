@@ -24,6 +24,12 @@ class TestAggregateQuery {
   SparkSession spark =
       SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
 
+  public TestAggregateQuery() {
+    this.spark.sparkContext().setLogLevel("ERROR");
+    spark.sparkContext().addJar("./out/artifacts/condition/condition.jar");
+    spark.sparkContext().addJar("./out/artifacts/aggregation/aggregation.jar");
+  }
+
   @Test
   void testBasicAggregation() {
     final Dataset<Row> dataframe = spark.read().table("basic");

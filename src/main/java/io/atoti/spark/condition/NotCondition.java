@@ -1,13 +1,18 @@
 package io.atoti.spark.condition;
 
-import org.apache.spark.api.java.function.FilterFunction;
-import org.apache.spark.sql.Row;
+import org.apache.spark.sql.Column;
+import org.apache.spark.sql.functions;
 
-public record NotCondition(QueryCondition condition) implements QueryCondition {
+public class NotCondition implements QueryCondition {
+  QueryCondition condition;
+
+  public NotCondition(QueryCondition condition) {
+    this.condition = condition;
+  }
 
   @Override
-  public FilterFunction<Row> getCondition() {
-    return (Row row) -> !this.condition.getCondition().call(row);
+  public Column getCondition() {
+    return functions.not(condition.getCondition());
   }
 
   @Override
