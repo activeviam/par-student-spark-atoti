@@ -3,7 +3,14 @@ package io.atoti.spark.condition;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.functions;
 
-public record EqualCondition(String column, Object value) implements QueryCondition {
+public class EqualCondition implements QueryCondition {
+  String column;
+  Object value;
+
+  public EqualCondition(String column, Object value) {
+    this.column = column;
+    this.value = value;
+  }
 
   @Override
   public Column getCondition() {

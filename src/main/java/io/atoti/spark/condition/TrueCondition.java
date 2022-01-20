@@ -9,7 +9,7 @@ package io.atoti.spark.condition;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.functions;
 
-public record TrueCondition() implements QueryCondition {
+public class TrueCondition implements QueryCondition {
 
   public static TrueCondition value() {
     return new TrueCondition();

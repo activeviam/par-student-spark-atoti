@@ -6,11 +6,15 @@ import static org.apache.spark.sql.functions.max;
 import java.util.Objects;
 import org.apache.spark.sql.Column;
 
-public record Max(String name, String column) implements AggregatedValue {
+public class Max implements AggregatedValue {
+  String name;
+  String column;
 
-  public Max {
+  public Max(String name, String column) {
     Objects.requireNonNull(name, "No name provided");
     Objects.requireNonNull(column, "No column provided");
+    this.name = name;
+    this.column = column;
   }
 
   public Column toAggregateColumn() {
