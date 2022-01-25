@@ -1,10 +1,14 @@
 package io.atoti.spark.condition;
 
+import static java.util.stream.Collectors.toList;
+
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.spark.sql.Column;
 
 public class OrCondition implements QueryCondition {
-  List<QueryCondition> conditions;
+  private List<QueryCondition> conditions;
 
   public OrCondition(List<QueryCondition> conditions) {
     if (conditions.isEmpty()) {
@@ -14,7 +18,7 @@ public class OrCondition implements QueryCondition {
   }
 
   public static OrCondition of(final QueryCondition... conditions) {
-    return new OrCondition(List.of(conditions));
+    return new OrCondition(Arrays.asList(conditions));
   }
 
   @Override
@@ -28,6 +32,6 @@ public class OrCondition implements QueryCondition {
   public String toSqlQuery() {
     return String.join(
         " OR ",
-        this.conditions.stream().map((condition) -> "(" + condition.toSqlQuery() + ")").toList());
+        this.conditions.stream().map((condition) -> "(" + condition.toSqlQuery() + ")").collect(toList()));
   }
 }

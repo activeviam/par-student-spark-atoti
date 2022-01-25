@@ -1,10 +1,13 @@
 package io.atoti.spark.condition;
 
+import static java.util.stream.Collectors.toList;
+
+import java.util.Arrays;
 import java.util.List;
 import org.apache.spark.sql.Column;
 
 public class AndCondition implements QueryCondition {
-  List<QueryCondition> conditions;
+  private List<QueryCondition> conditions;
 
   public AndCondition(List<QueryCondition> conditions) {
     if (conditions.isEmpty()) {
@@ -14,7 +17,7 @@ public class AndCondition implements QueryCondition {
   }
 
   public static AndCondition of(final QueryCondition... conditions) {
-    return new AndCondition(List.of(conditions));
+    return new AndCondition(Arrays.asList(conditions));
   }
 
   @Override
@@ -28,6 +31,6 @@ public class AndCondition implements QueryCondition {
   public String toSqlQuery() {
     return String.join(
         " AND ",
-        this.conditions.stream().map((condition) -> "(" + condition.toSqlQuery() + ")").toList());
+        this.conditions.stream().map((condition) -> "(" + condition.toSqlQuery() + ")").collect(toList()));
   }
 }
