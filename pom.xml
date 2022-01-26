@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.activeviam.students</groupId>
-	<artifactId>spark-atoti</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>Spark + Atoti student project</name>
+  <groupId>com.activeviam.students</groupId>
+  <artifactId>spark-atoti</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>Spark + Atoti student project</name>
 
   <properties>
     <java.version>16</java.version>
@@ -28,14 +28,10 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql_2.13</artifactId>
-      <version>3.2.0</version>
-    </dependency>
-    <dependency>
-      <groupId> org.openjdk.jmh</groupId>
+      <groupId>org.openjdk.jmh</groupId>
       <artifactId>jmh-generator-annprocess</artifactId>
       <version>${jmh.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -53,6 +49,27 @@
               <compileSourceRoot>${project.basedir}/src/main/java</compileSourceRoot>
             </compileSourceRoots>
           </configuration>
+          <executions>
+            <execution>
+              <!-- For tests, use the latest version of the JDK, compatible with any version -->
+              <id>test-compile</id>
+              <configuration>
+                <source>${java.version}</source>
+                <target>${java.version}</target>
+                <release>${java.version}</release>
+                <compilerArgs>
+                  <arg>--enable-preview</arg>
+                </compilerArgs>
+                <annotationProcessorPaths>
+                  <path>
+                    <groupId>org.openjdk.jmh</groupId>
+                    <artifactId>jmh-generator-annprocess</artifactId>
+                    <version>${jmh.version}</version>
+                  </path>
+                </annotationProcessorPaths>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>com.coveo</groupId>
@@ -72,15 +89,15 @@
         </configuration>
       </plugin>
 
-			<plugin>
-				<artifactId>maven-install-plugin</artifactId>
-				<version>2.4</version>
-				<!-- Do not contribute the resulting jar to maven repository, as no one
-					will use it -->
-				<configuration>
-					<skip>true</skip>
-				</configuration>
-			</plugin>
+      <plugin>
+        <artifactId>maven-install-plugin</artifactId>
+        <version>2.4</version>
+        <!-- Do not contribute the resulting jar to maven repository, as no one
+          will use it -->
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -102,7 +119,14 @@
 
   <profiles>
     <profile>
-      <id>IDE</id>
+      <id>standalone</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-sql_2.13</artifactId>
+          <version>3.2.0</version>
+        </dependency>
+      </dependencies>
       <build>
         <plugins>
           <plugin>
@@ -135,7 +159,18 @@
       </build>
     </profile>
     <profile>
-      <id>spark</id>
+      <id>databrick</id>
+      <!-- No dependency needed as one shall manually add databrick-connect dependencies
+      to its project. See https://docs.databricks.com/dev-tools/databricks-connect.html#set-up-your-ide-or-notebook-server-->
+      <dependencies>
+        <!-- Only use this version for compilation -->
+        <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-sql_2.13</artifactId>
+          <version>3.2.0</version>
+          <scope>provided</scope>
+        </dependency>
+      </dependencies>
       <build>
         <finalName>spark-lib-${project.version}</finalName>
         <plugins>
