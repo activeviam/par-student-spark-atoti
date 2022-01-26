@@ -159,8 +159,8 @@
       </build>
     </profile>
     <profile>
-      <id>databrick</id>
-      <!-- No dependency needed as one shall manually add databrick-connect dependencies
+      <id>databricks</id>
+      <!-- No dependency needed as one shall manually add databricks-connect dependencies
       to its project. See https://docs.databricks.com/dev-tools/databricks-connect.html#set-up-your-ide-or-notebook-server-->
       <dependencies>
         <!-- Only use this version for compilation -->
