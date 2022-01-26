@@ -120,13 +120,6 @@
   <profiles>
     <profile>
       <id>standalone</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.spark</groupId>
-          <artifactId>spark-sql_2.13</artifactId>
-          <version>3.2.0</version>
-        </dependency>
-      </dependencies>
       <build>
         <plugins>
           <plugin>
@@ -162,15 +155,6 @@
       <id>databricks</id>
       <!-- No dependency needed as one shall manually add databricks-connect dependencies
       to its project. See https://docs.databricks.com/dev-tools/databricks-connect.html#set-up-your-ide-or-notebook-server-->
-      <dependencies>
-        <!-- Only use this version for compilation -->
-        <dependency>
-          <groupId>org.apache.spark</groupId>
-          <artifactId>spark-sql_2.13</artifactId>
-          <version>3.2.0</version>
-          <scope>provided</scope>
-        </dependency>
-      </dependencies>
       <build>
         <finalName>spark-lib-${project.version}</finalName>
         <plugins>
@@ -189,6 +173,18 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>spark-dependencies</id>
+      <dependencies>
+        <!-- Only use this version for compilation. Mostly for a maven command or IDEs running
+        local tests -->
+        <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-sql_2.13</artifactId>
+          <version>3.2.0</version>
+        </dependency>
+      </dependencies>
     </profile>
   </profiles>
 
