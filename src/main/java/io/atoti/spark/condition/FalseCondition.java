@@ -6,8 +6,8 @@
  */
 package io.atoti.spark.condition;
 
-import org.apache.spark.api.java.function.FilterFunction;
-import org.apache.spark.sql.Row;
+import org.apache.spark.sql.Column;
+import org.apache.spark.sql.functions;
 
 public record FalseCondition() implements QueryCondition {
 
@@ -16,8 +16,8 @@ public record FalseCondition() implements QueryCondition {
   }
 
   @Override
-  public FilterFunction<Row> getCondition() {
-    return (Row row) -> false;
+  public Column getCondition() {
+    return functions.lit(false);
   }
 
   @Override
