@@ -189,7 +189,7 @@
     <profile>
       <id>jar-creation</id>
       <dependencies>
-        <!-- Only use this version for creating the jar with command ./mvnw -P jar-creation clean package -->
+        <!-- Only use this version for creating the jar with command ./mvnw -P jar-creation clean package clean -->
         <dependency>
           <groupId>org.apache.spark</groupId>
           <artifactId>spark-sql_2.13</artifactId>
@@ -231,6 +231,18 @@
             </configuration>
           </plugin>
         </plugins>
+        <resources>
+          <resource>
+            <directory>src/main</directory>
+            <includes>
+              <include>io/atoti/spark/condition/**/*.java</include>
+              <include>io/atoti/spark/aggregation/**/*.java</include>
+            </includes>
+            <excludes>
+              <exclude>resources</exclude>
+            </excludes>
+          </resource>
+        </resources>
       </build>
     </profile>
   </profiles>
