@@ -156,6 +156,47 @@
       <!-- No dependency needed as one shall manually add databricks-connect dependencies
       to its project. See https://docs.databricks.com/dev-tools/databricks-connect.html#set-up-your-ide-or-notebook-server-->
       <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <source>${java.version}</source>
+              <target>${java.version}</target>
+              <release>${java.version}</release>
+              <compilerArgs>
+                <arg>--enable-preview</arg>
+              </compilerArgs>
+            </configuration>
+            <executions>
+              <execution>
+                <id>test-compile</id>
+                <configuration>
+                  <annotationProcessorPaths>
+                    <path>
+                      <groupId>org.openjdk.jmh</groupId>
+                      <artifactId>jmh-generator-annprocess</artifactId>
+                      <version>${jmh.version}</version>
+                    </path>
+                  </annotationProcessorPaths>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>jar-creation</id>
+      <dependencies>
+        <!-- Only use this version for creating the jar with command ./mvnw -P jar-creation clean package -->
+        <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-sql_2.13</artifactId>
+          <version>3.2.0</version>
+        </dependency>
+      </dependencies>
+      <build>
         <finalName>spark-lib-${project.version}</finalName>
         <plugins>
           <plugin>
@@ -171,20 +212,26 @@
               </includes>
             </configuration>
           </plugin>
+          <plugin>
+            <artifactId>maven-clean-plugin</artifactId>
+            <version>3.1.0</version>
+            <configuration>
+              <excludeDefaultDirectories>true</excludeDefaultDirectories>
+              <filesets>
+                <fileset>
+                  <directory>target</directory>
+                  <includes>
+                    <include>**</include>
+                  </includes>
+                  <excludes>
+                    <exclude>*.jar</exclude>
+                  </excludes>
+                </fileset>
+              </filesets>
+            </configuration>
+          </plugin>
         </plugins>
       </build>
-    </profile>
-    <profile>
-      <id>spark-dependencies</id>
-      <dependencies>
-        <!-- Only use this version for compilation. Mostly for a maven command or IDEs running
-        local tests -->
-        <dependency>
-          <groupId>org.apache.spark</groupId>
-          <artifactId>spark-sql_2.13</artifactId>
-          <version>3.2.0</version>
-        </dependency>
-      </dependencies>
     </profile>
   </profiles>
 

@@ -37,7 +37,6 @@ public class BenchmarkSparkSql {
     public void setup() {
         spark = SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
         spark.sparkContext().addJar("./target/spark-lib-0.0.1-SNAPSHOT.jar");
-        spark.sparkContext().addJar("./target/spark-lib-0.0.1-SNAPSHOT.jar");
         spark.sparkContext().setLogLevel("ERROR");
         dataframe = spark.read().table("us_accidents_15m");
         tableName = "us_accidents_15m";
