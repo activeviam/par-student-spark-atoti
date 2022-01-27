@@ -30,6 +30,7 @@ class TestSqlQuery {
 
   public TestSqlQuery() {
     spark.sparkContext().setLogLevel("ERROR");
+    spark.sparkContext().addJar("./target/spark-lib-0.0.1-SNAPSHOT.jar");
   }
 
   @Test
