@@ -18,6 +18,8 @@ For windows users, use `mvnw.cmd` instead of `./mvnw`.
 
 To run tests, use `./mvnw test`.
 
+Don't forget to create the .env based on the .env.example if you use a databricks cluster !
+
 # Formatting
 
 Not to worry too much on different coding styles, this code base is formatted
@@ -28,26 +30,8 @@ To use it, run `./mvnw com.coveo:fmt-maven-plugin:format`.
 
 # Build Jar for DataBricks
 
-You have to build two jars if you want to launch jobs on databricks.
-
-### Condition
-
-Go to src/java/io/atoti/spark/condition/ and run this command :
+You have to build two jars if you want to launch jobs on databricks. To do so, run this command :
 ```shell
-javac -cp <path_to_jar>\* -source 1.8 -target 1.8 QueryCondition.java FalseCondition.java TrueCondition.java NotCondition.java NullCondition.java EqualCondition.java AndCondition.java OrCondition.java
+./mvnw -P jar-creation clean package clean
 ```
-With <path_to_jar> the path given by the command `databricks-connect get-jar-dir`.
-
-Then, create a jar in out/artifacts/condition/ called condition.jar  
-Into this jar, create this structure: io/atoti/spark/condition/ and put the all the condition class files inside
-
-### Aggregation
-
-Go to src/java/io/atoti/spark/aggregation/ and run this command :
-```shell
-javac -cp C:\Users\arnau\anaconda3\envs\databricks\Lib\site-packages\pyspark\jars\* -source 1.8 -target 1.8 AggregatedValue.java Avg.java Count.java Max.java Min.java Sum.java
-```
-With <path_to_jar> the path given by the command `databricks-connect get-jar-dir`.
-
-Then, create a jar in out/artifacts/aggregation/ called condition.jar  
-Into this jar, create this structure: io/atoti/spark/aggregation/ and put the all the aggregation class files inside
+Then, you can build the project and run the tests/benchmarks (you have to be on the databricks profile)

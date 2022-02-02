@@ -3,6 +3,7 @@ package io.atoti.spark;
 import io.atoti.spark.aggregation.*;
 import io.atoti.spark.condition.EqualCondition;
 import io.atoti.spark.condition.QueryCondition;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.spark.sql.*;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -32,7 +33,12 @@ public class BenchmarkSparkSql {
 
     @Setup()
     public void setup() {
-        spark = SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+        Dotenv dotenv = Dotenv.load();
+        spark = SparkSession.builder()
+                .appName("Spark Atoti")
+                .config("spark.master", "local")
+                .config("spark.databricks.service.clusterId", dotenv.get("clusterId"))
+                .getOrCreate();
         spark.sparkContext().addJar("./target/spark-lib-0.0.1-SNAPSHOT.jar");
         spark.sparkContext().setLogLevel("ERROR");
         dataframe = spark.read().table("us_accidents_15m");
