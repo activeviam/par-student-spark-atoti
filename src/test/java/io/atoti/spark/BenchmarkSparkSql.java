@@ -23,6 +23,7 @@ public class BenchmarkSparkSql {
     int offset;
     List<String> wantedColumns;
     QueryCondition condition;
+    QueryCondition conditionCrossing;
     List<String> groupByColumns;
     List<AggregatedValue> aggregation;
 
@@ -47,6 +48,7 @@ public class BenchmarkSparkSql {
         offset = 100000;
         wantedColumns = List.of("ID", "Severity");
         condition = new EqualCondition("Severity", 4);
+        conditionCrossing = new EqualCondition("Crossing", true);
         groupByColumns = List.of("Severity");
         aggregation = List.of(new Count("severity_count"));
     }
@@ -110,6 +112,28 @@ public class BenchmarkSparkSql {
     @Measurement(iterations = 10)
     public void benchmarkSparkSqlAggregation(Blackhole bh) {
         final Dataset<Row> rows = AggregateQuery.aggregateSql(spark, tableName, groupByColumns, aggregation);
+        rows.show(); // mandatory to trigger the computation of the dataset
+        bh.consume(rows);
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.SingleShotTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 3)
+    @Measurement(iterations = 10)
+    public void benchmarkSparkApiAggregationAndCondition(Blackhole bh) {
+        final Dataset<Row> rows = AggregateQuery.aggregate(dataframe, groupByColumns, aggregation, conditionCrossing);
+        rows.show(); // mandatory to trigger the computation of the dataset
+        bh.consume(rows);
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.SingleShotTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 0)
+    @Measurement(iterations = 1)
+    public void benchmarkSparkSqlAggregationAndCondition(Blackhole bh) {
+        final Dataset<Row> rows = AggregateQuery.aggregateSql(spark, tableName, groupByColumns, aggregation, conditionCrossing);
         rows.show(); // mandatory to trigger the computation of the dataset
         bh.consume(rows);
     }
