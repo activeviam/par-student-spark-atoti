@@ -14,6 +14,8 @@ import io.atoti.spark.condition.TrueCondition;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -21,11 +23,16 @@ import org.junit.jupiter.api.Test;
 
 class TestAggregateQuery {
 
-  SparkSession spark =
-      SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+  static Dotenv dotenv = Dotenv.load();
+  static SparkSession spark =
+          SparkSession.builder()
+                  .appName("Spark Atoti")
+                  .config("spark.master", "local")
+                  .config("spark.databricks.service.clusterId", dotenv.get("clusterId"))
+                  .getOrCreate();
 
   public TestAggregateQuery() {
-    this.spark.sparkContext().setLogLevel("ERROR");
+    spark.sparkContext().setLogLevel("ERROR");
     spark.sparkContext().addJar("./target/spark-lib-0.0.1-SNAPSHOT.jar");
   }
 

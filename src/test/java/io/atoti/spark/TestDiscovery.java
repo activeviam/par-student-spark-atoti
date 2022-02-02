@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
+
+import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -12,8 +14,14 @@ import org.apache.spark.sql.types.DataTypes;
 import org.junit.jupiter.api.Test;
 
 public class TestDiscovery {
-  SparkSession spark =
-      SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+
+  static Dotenv dotenv = Dotenv.load();
+  static SparkSession spark =
+      SparkSession.builder()
+              .appName("Spark Atoti")
+              .config("spark.master", "local")
+              .config("spark.databricks.service.clusterId", dotenv.get("clusterId"))
+              .getOrCreate();
 
   @Test
   void testDiscoveryBasis() {

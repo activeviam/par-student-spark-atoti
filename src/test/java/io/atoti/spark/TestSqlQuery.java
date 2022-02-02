@@ -19,14 +19,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
 
 class TestSqlQuery {
 
+  static Dotenv dotenv = Dotenv.load();
   static SparkSession spark =
-      SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+      SparkSession.builder()
+              .appName("Spark Atoti")
+              .config("spark.master", "local")
+              .config("spark.databricks.service.clusterId", dotenv.get("clusterId"))
+              .getOrCreate();
 
   public TestSqlQuery() {
     spark.sparkContext().setLogLevel("ERROR");

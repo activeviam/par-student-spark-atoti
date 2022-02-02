@@ -1,5 +1,6 @@
 package io.atoti.spark;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +31,12 @@ public class BenchmarkListQuery {
 
     @Setup()
     public void setup() {
-        spark = SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+        Dotenv dotenv = Dotenv.load();
+        spark = SparkSession.builder()
+                .appName("Spark Atoti")
+                .config("spark.master", "local")
+                .config("spark.databricks.service.clusterId", dotenv.get("clusterId"))
+                .getOrCreate();
         spark.sparkContext().setLogLevel("ERROR");
         dataframe = spark.read().table("us_accidents_dec20_updated_csv");
         limit = 100000;
