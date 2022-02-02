@@ -214,6 +214,8 @@
               <includes>
                 <include>io/atoti/spark/condition/**/*.java</include>
                 <include>io/atoti/spark/aggregation/**/*.java</include>
+                <include>io/atoti/spark/join/**/*.java</include>
+                <include>io/atoti/spark/ListQuery.java</include>
               </includes>
             </configuration>
           </plugin>
@@ -242,6 +244,8 @@
             <includes>
               <include>io/atoti/spark/condition/**/*.java</include>
               <include>io/atoti/spark/aggregation/**/*.java</include>
+              <include>io/atoti/spark/join/**/*.java</include>
+              <include>io/atoti/spark/ListQuery.java</include>
             </includes>
             <excludes>
               <exclude>resources</exclude>
