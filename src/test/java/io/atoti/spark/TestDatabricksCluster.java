@@ -3,6 +3,8 @@ package io.atoti.spark;
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.Date;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.spark.sql.SparkSession;
@@ -11,6 +13,8 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.Dataset;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TestDatabricksCluster {
 
@@ -60,7 +64,6 @@ public class TestDatabricksCluster {
                 "WHERE AirportCode != 'BLI' AND Date > '2021-04-01' " +
                 "GROUP BY AirportCode, Date, TempHighF, TempLowF " +
                 "ORDER BY TempHighF DESC");
-        df_temps.show();
 
         // Results:
         //
@@ -72,6 +75,17 @@ public class TestDatabricksCluster {
         // |        SEA|2021-04-03|       57|      43|
         // |        SEA|2021-04-02|       54|      39|
         // +-----------+----------+---------+--------+
+
+        assertThat(df_temps).isNotNull();
+        List<Row> rows = df_temps.collectAsList();
+        assertThat(rows).hasSize(4);
+        final var valuesById =
+                rows.stream()
+                        .collect(
+                                Collectors.toUnmodifiableMap(
+                                        row -> ((Number) row.getAs("TempLowF")).intValue(),
+                                        row -> ((String) row.getAs("AirportCode"))));
+        assertThat(valuesById).containsExactlyEntriesOf(Map.of(45, "PDX", 41, "PDX", 43, "SEA", 39, "SEA"));
 
         // Clean up by deleting the table from the Databricks cluster.
         spark.sql("DROP TABLE demo_temps_table");
