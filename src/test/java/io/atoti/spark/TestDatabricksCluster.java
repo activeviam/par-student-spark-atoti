@@ -3,22 +3,27 @@ package io.atoti.spark;
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.Date;
+
+import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.*;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.Dataset;
+import org.junit.jupiter.api.Test;
 
-public class DatabricksCluster {
-    public static void main(String[] args) throws Exception {
-        SparkSession spark = SparkSession
-                .builder()
-                .appName("Temps Demo")
-                .config("spark.master", "local")
-                .getOrCreate();
+public class TestDatabricksCluster {
 
-        // Create a Spark DataFrame consisting of high and low temperatures
-        // by airport code and date.
+    static Dotenv dotenv = Dotenv.load();
+    static SparkSession spark =
+            SparkSession.builder()
+                    .appName("Spark Atoti")
+                    .config("spark.master", "local")
+                    .config("spark.databricks.service.clusterId", dotenv.get("clusterId"))
+                    .getOrCreate();
+
+    @Test
+    void testDatabricksConnection() {
         StructType schema = new StructType(new StructField[] {
                 new StructField("AirportCode", DataTypes.StringType, false, Metadata.empty()),
                 new StructField("Date", DataTypes.DateType, false, Metadata.empty()),
