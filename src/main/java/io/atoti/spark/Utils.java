@@ -1,13 +1,14 @@
 package io.atoti.spark;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.Comparator;
 
 import scala.collection.JavaConverters;
 import scala.collection.immutable.ArraySeq;
+import scala.collection.immutable.Seq;
 
 record ArrayElement(int index, int value) {}
 
@@ -18,6 +19,10 @@ public class Utils {
 				.asJavaCollectionConverter(arr)
 				.asJavaCollection()
 		);
+	}
+
+	public static Seq<Integer> convertToArrayListToScalaArraySeq(ArrayList<Integer> arr) {
+		return JavaConverters.asScala(arr).iterator().toSeq();
 	}
 	
 	public static PriorityQueue<ArrayElement> constructMaxHeap(ArrayList<Integer> arr) {

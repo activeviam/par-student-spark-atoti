@@ -114,8 +114,8 @@ public class TestDiscovery {
     final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
     assertThat(dataframe).isNotNull();
-    dataframe.show();
     assertThat(dTypes).isNotNull();
-    assertThat(dTypes.get("price_simulations")).isEqualTo(DataTypes.createArrayType(DataTypes.IntegerType));
+    assertThat(dTypes.get("price_simulations"))
+        .isEqualTo(DataTypes.createArrayType(DataTypes.IntegerType));
   }
 }

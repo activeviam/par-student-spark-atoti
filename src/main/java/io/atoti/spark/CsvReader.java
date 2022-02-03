@@ -31,18 +31,23 @@ public class CsvReader {
               .option("inferSchema", true)
               .load(url.toURI().getPath());
       for (int i = 0; i < dataframe.columns().length; i++) {
-    	  if (dataframe.dtypes()[i]._2 == DataTypes.StringType.toString()) {
-    		  String col = dataframe.columns()[i];
-    		  if (dataframe.filter(functions.col(col).$eq$eq$eq("").$bar$bar(functions.col(col).rlike(","))).count() == dataframe.count()) {
-    			  // This prototype only supports arrays of integers
-    			  dataframe = dataframe.withColumn(col, functions.split(functions.col(col), ",").cast("array<int>"));
-    		  }
-    	  }
+        if (dataframe.dtypes()[i]._2 == DataTypes.StringType.toString()) {
+          String col = dataframe.columns()[i];
+          if (dataframe
+                  .filter(functions.col(col).$eq$eq$eq("").$bar$bar(functions.col(col).rlike(",")))
+                  .count()
+              == dataframe.count()) {
+            // This prototype only supports arrays of integers
+            dataframe =
+                dataframe.withColumn(
+                    col, functions.split(functions.col(col), ",").cast("array<int>"));
+          }
+        }
       }
     } catch (URISyntaxException e) {
       throw new IllegalArgumentException("Failed to read csv " + path, e);
     }
-   
+
     return dataframe;
   }
 }
