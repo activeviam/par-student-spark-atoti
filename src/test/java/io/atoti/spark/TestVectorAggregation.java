@@ -10,21 +10,49 @@ import io.atoti.spark.aggregation.Multiply;
 import io.atoti.spark.aggregation.Quantile;
 import io.atoti.spark.aggregation.QuantileIndex;
 import io.atoti.spark.aggregation.Sum;
+import io.atoti.spark.aggregation.SumVector;
 import io.atoti.spark.aggregation.VectorAt;
 import java.util.Comparator;
 import java.util.List;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
+
 import org.junit.jupiter.api.Test;
 
 public class TestVectorAggregation {
-
+	
+  SparkSession spark =
+		SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+  
+  @Test
+  void quantile() {
+	  final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
+	  var price_simulations = new SumVector("price_simulations", "price_simulations");
+	  var getHead = new Quantile("quantile", price_simulations, 95f);
+	  var df = AggregateQuery.aggregate(dataframe, List.of("id", "price_simulations"), List.of(getHead));
+	  df.show();
+  }
+  
+  @Test
+  void vectorAt() {
+	  final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
+	  var price_simulations = new SumVector("price_simulations_bis", "price_simulations");
+	  var vectorAt = new VectorAt("vector-at", price_simulations, 1);
+	  var df = AggregateQuery.aggregate(dataframe, List.of("id", "price_simulations"), List.of(vectorAt));
+	  df.show();
+  }
+  
   @Test
   void simpleAggregation() {
-    final Dataset<Row> dataframe = null;
-    AggregateQuery.aggregate(
-            dataframe, List.of("simulation"), List.of(new Sum("sum(vector)", "vector-field")))
-        .collectAsList();
+    final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
+    var sumVector = new SumVector("sum(vector)", "price_simulations");
+    System.out.println("LOGS");
+    System.out.println(sumVector.toAggregateColumn());
+    dataframe.select(sumVector.toAggregateColumn());
+    var df = AggregateQuery.aggregate(
+            dataframe, List.of("id"), List.of(sumVector));
+    System.out.println(df);
   }
 
   @Test

@@ -2,7 +2,6 @@ package io.atoti.spark;
 
 import java.util.ArrayList;
 import java.util.PriorityQueue;
-import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.Comparator;
@@ -10,7 +9,7 @@ import java.util.Comparator;
 import scala.collection.JavaConverters;
 import scala.collection.immutable.ArraySeq;
 
-record ArrayElement<T>(int index, T value) {}
+record ArrayElement(int index, int value) {}
 
 public class Utils {
 
@@ -21,13 +20,38 @@ public class Utils {
 		);
 	}
 	
-	public static PriorityQueue<ArrayElement<Integer>> constructMaxHeap(ArrayList<Integer> arr) {
-		var pq = new PriorityQueue<ArrayElement<Integer>>();
+	public static PriorityQueue<ArrayElement> constructMaxHeap(ArrayList<Integer> arr) {
+		var pq = new PriorityQueue<ArrayElement>(
+			(ArrayElement a, ArrayElement b) -> b.value() - a.value()
+		);
 		pq.addAll(IntStream.range(0, arr.size())
-				.mapToObj((int k) -> new ArrayElement<Integer>(k, arr.get(k)))
+				.mapToObj((int k) -> new ArrayElement(k, arr.get(k)))
 				.collect(Collectors.toList())
 			);
 		return pq;
+	}
+	
+	public static int quantile(ArrayList<Integer> arr, float percent) {
+		var pq = constructMaxHeap(arr);
+		int index = (int)Math.ceil(arr.size() * percent / 100);
+		
+		for (int i = arr.size() - 1; i > index; i--) {
+			pq.poll();
+		}
+		
+		var k = pq.poll();
+		return (k.value() + pq.peek().value()) / 2;
+	}
+	
+	public static int quantileIndex(ArrayList<Integer> arr, float percent) {
+		var pq = constructMaxHeap(arr);
+		int index = (int)Math.ceil(arr.size() * percent / 100);
+		
+		for (int i = arr.size() - 1; i > index; i--) {
+			pq.poll();
+		}
+		
+		return pq.poll().index();
 	}
 	
 	public static int findKthLargestElement(ArrayList<Integer> arr, int k) {

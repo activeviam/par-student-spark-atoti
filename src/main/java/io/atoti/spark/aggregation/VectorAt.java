@@ -3,6 +3,9 @@ package io.atoti.spark.aggregation;
 import java.util.Objects;
 import org.apache.spark.sql.Column;
 
+import static org.apache.spark.sql.functions.element_at;
+import static org.apache.spark.sql.functions.col;
+
 public record VectorAt(String name, AggregatedValue vectorValue, int position) implements AggregatedValue {
 
   public VectorAt {
@@ -14,11 +17,11 @@ public record VectorAt(String name, AggregatedValue vectorValue, int position) i
   }
 
   public Column toAggregateColumn() {
-    throw new UnsupportedOperationException("TODO");
+    return element_at(vectorValue.toColumn(), position).alias(name);
   }
 
   public Column toColumn() {
-    throw new UnsupportedOperationException("TODO");
+    return col(name);
   }
 
   public String toSqlQuery() {
