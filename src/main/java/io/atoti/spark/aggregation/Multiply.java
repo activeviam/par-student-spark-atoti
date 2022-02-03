@@ -16,7 +16,7 @@ import org.apache.spark.sql.types.DataTypes;
 
 import scala.collection.immutable.ArraySeq;
 
-public record Multiply(String name, AggregatedValue lhs, AggregatedValue rhs, Dataset<Row> dataframe)
+public record Multiply(String name, AggregatedValue lhs, AggregatedValue rhs)
     implements AggregatedValue {
 
   public Multiply {
@@ -31,6 +31,7 @@ public record Multiply(String name, AggregatedValue lhs, AggregatedValue rhs, Da
   }, DataTypes.createArrayType(DataTypes.IntegerType));
 
   public Column toAggregateColumn() {
+	  // TODO: fix this method. It does not work because the aggregatedColumn do not actually exist on the dataframe
 	  return Multiply.udf.apply(lhs.toAggregateColumn(), rhs.toAggregateColumn()).alias(name);
   }
 

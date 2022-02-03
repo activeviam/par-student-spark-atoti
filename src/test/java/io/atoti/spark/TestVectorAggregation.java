@@ -6,19 +6,20 @@
  */
 package io.atoti.spark;
 
+import java.util.Comparator;
+import java.util.List;
+
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
+import org.junit.jupiter.api.Test;
+
 import io.atoti.spark.aggregation.Multiply;
 import io.atoti.spark.aggregation.Quantile;
 import io.atoti.spark.aggregation.QuantileIndex;
 import io.atoti.spark.aggregation.Sum;
-import io.atoti.spark.aggregation.SumVector;
+import io.atoti.spark.aggregation.SumArray;
 import io.atoti.spark.aggregation.VectorAt;
-import java.util.Comparator;
-import java.util.List;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
-
-import org.junit.jupiter.api.Test;
 
 public class TestVectorAggregation {
 	
@@ -28,7 +29,7 @@ public class TestVectorAggregation {
   @Test
   void quantile() {
 	  final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
-	  var price_simulations = new SumVector("price_simulations", "price_simulations");
+	  var price_simulations = new SumArray("price_simulations", "price_simulations", spark.implicits().newIntArrayEncoder());
 	  var getHead = new Quantile("quantile", price_simulations, 95f);
 	  var df = AggregateQuery.aggregate(dataframe, List.of("id", "price_simulations"), List.of(getHead));
 	  df.show();
@@ -37,7 +38,7 @@ public class TestVectorAggregation {
   @Test
   void vectorAt() {
 	  final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
-	  var price_simulations = new SumVector("price_simulations_bis", "price_simulations");
+	  var price_simulations = new SumArray("price_simulations_bis", "price_simulations", spark.implicits().newIntArrayEncoder());
 	  var vectorAt = new VectorAt("vector-at", price_simulations, 1);
 	  var df = AggregateQuery.aggregate(dataframe, List.of("id", "price_simulations"), List.of(vectorAt));
 	  df.show();
@@ -46,7 +47,7 @@ public class TestVectorAggregation {
   @Test
   void simpleAggregation() {
     final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
-    var sumVector = new SumVector("sum(vector)", "price_simulations");
+    var sumVector = new SumArray("sum(vector)", "price_simulations", spark.implicits().newIntArrayEncoder());
     System.out.println("LOGS");
     System.out.println(sumVector.toAggregateColumn());
     dataframe.select(sumVector.toAggregateColumn());
