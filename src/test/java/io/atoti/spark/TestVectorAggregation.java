@@ -29,10 +29,26 @@ public class TestVectorAggregation {
   @Test
   void quantile() {
 	  final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
-	  var price_simulations = new SumArray("price_simulations", "price_simulations", spark.implicits().newIntArrayEncoder());
+	  var price_simulations = new SumArray("price_simulations_sum", "price_simulations", spark.implicits().newIntArrayEncoder());
+	  // final var newDf = dataframe.withColumn(price_simulations.name, price_simulations.toAggregateColumn());
 	  var getHead = new Quantile("quantile", price_simulations, 95f);
-	  var df = AggregateQuery.aggregate(dataframe, List.of("id", "price_simulations"), List.of(getHead));
+	  var df = AggregateQuery.aggregate(dataframe, List.of("id", "price_simulations"), List.of(price_simulations, getHead));
 	  df.show();
+  }
+  
+  @Test
+  void twoAggregations() {
+	  final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
+	  
+	  var sum_simulations = new SumArray("sum_simulations", "price_simulations", spark.implicits().newIntArrayEncoder());
+	  var firstAgg = AggregateQuery.aggregate(dataframe, List.of("id"), List.of(sum_simulations));
+	  
+	  firstAgg.show();
+	  
+	  var quantile = new Quantile("quantile", sum_simulations, 95f);
+	  var secondAgg = AggregateQuery.aggregate(firstAgg, List.of("id", "sum_simulations"), List.of(quantile));
+	  
+	  secondAgg.show();
   }
   
   @Test
@@ -50,7 +66,7 @@ public class TestVectorAggregation {
     var sumVector = new SumArray("sum(vector)", "price_simulations", spark.implicits().newIntArrayEncoder());
     System.out.println("LOGS");
     System.out.println(sumVector.toAggregateColumn());
-    dataframe.select(sumVector.toAggregateColumn());
+    // dataframe.select(sumVector.toAggregateColumn());
     var df = AggregateQuery.aggregate(
             dataframe, List.of("id"), List.of(sumVector));
     System.out.println(df);
@@ -58,15 +74,15 @@ public class TestVectorAggregation {
 
   @Test
   void vectorScaling() {
-    final Dataset<Row> dataframe = null;
+    final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
     AggregateQuery.aggregate(
             dataframe,
-            List.of("simulation"),
+            List.of("id"),
             List.of(
                 new Multiply(
                     "f * vector",
-                    new Sum("f", "factor-field"),
-                    new Sum("sum(vector)", "vector-field"))))
+                    new Sum("f", "price"),
+                    new SumArray("sum(vector)", "price_simulations"))))
         .collectAsList();
   }
 
