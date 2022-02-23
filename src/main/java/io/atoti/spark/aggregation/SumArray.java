@@ -84,11 +84,11 @@ public final class SumArray implements AggregatedValue, Serializable {
   }
 
   public Column toAggregateColumn() {
-    return udaf.toColumn().as(name);
+    return udaf.toColumn().as(this.name);
   }
 
   public Column toColumn() {
-    return col(name);
+    return col(this.name);
   }
 
   public String toSqlQuery() {

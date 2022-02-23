@@ -32,7 +32,7 @@ public record Multiply(String name, AggregatedValue lhs, AggregatedValue rhs)
 
   public Column toAggregateColumn() {
 	  // TODO: fix this method. It does not work because the aggregatedColumn do not actually exist on the dataframe
-	  return Multiply.udf.apply(lhs.toAggregateColumn(), rhs.toAggregateColumn()).alias(name);
+	  return Multiply.udf.apply(lhs.toColumn(), rhs.toColumn()).alias(name);
   }
 
   public Column toColumn() {

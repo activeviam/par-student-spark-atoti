@@ -7,7 +7,6 @@ import java.util.Objects;
 import org.apache.spark.sql.Column;
 
 public record Sum(String name, String column) implements AggregatedValue {
-
   public Sum {
     Objects.requireNonNull(name, "No name provided");
     Objects.requireNonNull(column, "No column provided");
