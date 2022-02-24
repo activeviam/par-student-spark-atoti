@@ -140,10 +140,27 @@ public class DatabricksManager {
     body.put("cluster_id", clusterId);
     body.put("num_workers", workerNumber);
 
-    return DatabricksManager.apiAsyncCall(
+    CompletableFuture<JSONObject> response = DatabricksManager.apiAsyncCall(
             "api/2.0/clusters/resize",
             "POST",
             body);
+
+    if(wait) {
+      response = response.thenApply((r) -> {
+        try {
+          boolean result = DatabricksManager.checkState("RUNNING", List.of("RUNNING", "RESIZING")).get();
+          if (!result) {
+            throw new Exception("Error while providing new workers to the cluster");
+          }
+          return r;
+        } catch (Exception e) {
+          e.printStackTrace();
+          return null;
+        }
+      });
+    }
+
+    return response;
   }
 
   public static JSONObject state() throws Exception {
