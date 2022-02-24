@@ -7,6 +7,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -18,6 +21,9 @@ public class DatabricksManager {
   static private final String token = dotenv.get("token");
   static private final String clusterUrl = dotenv.get("clusterUrl");
   static private final int timeOut = 10;
+  static private final int delayBeforeStateCheck = 1000;
+  static private final int periodStateCheck = 5000;
+  static private final int maxStateCheck = 60;
 
   private static HttpRequest buildHttpQuery(String endPoint, String method, JSONObject body) throws Exception {
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(new URI(clusterUrl + endPoint));
@@ -73,15 +79,60 @@ public class DatabricksManager {
              });
   }
 
+  private static CompletableFuture<Boolean> checkState(String targetState, List<String> allowedState) {
+    CompletableFuture<Boolean> ready = new CompletableFuture<>();
+
+    Timer timer = new Timer();
+    timer.scheduleAtFixedRate(new TimerTask() {
+      int count = 0;
+
+      @Override
+      public void run() {
+        count++;
+        try {
+          JSONObject response = DatabricksManager.state();
+          if(response.get("state").toString().equals(targetState)) {
+            ready.complete(true);
+            timer.cancel();
+          } else if(!allowedState.contains(response.get("state").toString())) {
+            ready.complete(false);
+            timer.cancel();
+          }
+        } catch (Exception e) {
+          e.printStackTrace();
+          ready.complete(false);
+          timer.cancel();
+        }
+
+        if(count >= maxStateCheck) {
+          ready.complete(false);
+          timer.cancel();
+        }
+      }
+    }, delayBeforeStateCheck,periodStateCheck);
+
+    return ready;
+  }
+
   public static void resize(int workerNumber, boolean wait) throws Exception {
     JSONObject body = new JSONObject();
     body.put("cluster_id", clusterId);
     body.put("num_workers", workerNumber);
 
-    JSONObject response = DatabricksManager.apiSyncCall(
+    DatabricksManager.apiSyncCall(
             "api/2.0/clusters/resize",
             "POST",
             body);
+
+    if(wait) {
+      System.out.println("Waiting for the end of resizing : this action can take up to " + maxStateCheck*periodStateCheck/1000 + "s");
+      boolean result = DatabricksManager.checkState("RUNNING", List.of("RUNNING", "RESIZING")).get();
+
+      if (!result) {
+        throw new Exception("Error while providing new workers to the cluster");
+      }
+      System.out.println("The cluster has been resized successfully!");
+    }
   }
 
   public static CompletableFuture<JSONObject> resizeAsync(int workerNumber, boolean wait) throws Exception {
