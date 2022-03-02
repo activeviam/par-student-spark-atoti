@@ -1,18 +1,16 @@
 package io.atoti.spark;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import okhttp3.*;
 import org.json.JSONObject;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
+
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
-
-import static java.time.temporal.ChronoUnit.SECONDS;
+import java.util.concurrent.TimeUnit;
 
 
 public class DatabricksManager {
@@ -24,59 +22,68 @@ public class DatabricksManager {
   static private final int delayBeforeStateCheck = 1000;
   static private final int periodStateCheck = 5000;
   static private final int maxStateCheck = 60;
+  static private final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
-  private static HttpRequest buildHttpQuery(String endPoint, String method, JSONObject body) throws Exception {
-    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(new URI(clusterUrl + endPoint));
-
-    switch (method) {
-      case "POST" -> requestBuilder = requestBuilder.POST(HttpRequest.BodyPublishers.ofString(body.toString()));
-      case "GET" -> requestBuilder = requestBuilder.GET();
-      default -> throw new Exception(method + " is not a valid method. Available methods are : POST, GET");
-    }
+  private static Request buildHttpQuery(String endPoint, JSONObject body) throws Exception {
+    Request.Builder requestBuilder = new Request
+            .Builder()
+            .url(clusterUrl + endPoint)
+            .post(RequestBody.create(body.toString(), JSON));
 
     return requestBuilder
             .header("Content-Type","application/json")
-            .header("Authorization", "Bearer " + token)
-            .timeout(Duration.of(timeOut, SECONDS))
+            .addHeader("Authorization", "Bearer " + token)
             .build();
   }
 
-  private static JSONObject buildHttpResponse(HttpResponse<String> response) throws Exception {
-    int status = response.statusCode();
-
-    if (status > 299) {
-      throw new Exception(response.body());
+  private static JSONObject buildHttpResponse(Response response) throws Exception {
+    if (response.isSuccessful()) {
+      return new JSONObject(response.body().string());
     } else {
-      return new JSONObject(response.body());
+      throw new Exception(response.toString());
     }
   }
 
-  private static JSONObject apiSyncCall(String endPoint, String method, JSONObject body) throws Exception {
-    HttpRequest request = DatabricksManager.buildHttpQuery(endPoint, method, body);
+  private static JSONObject apiSyncCall(String endPoint, JSONObject body) throws Exception {
+    OkHttpClient client = new OkHttpClient
+            .Builder()
+            .connectTimeout(timeOut, TimeUnit.SECONDS)
+            .writeTimeout(timeOut, TimeUnit.SECONDS)
+            .readTimeout(timeOut, TimeUnit.SECONDS)
+            .build();
+    Request request = DatabricksManager.buildHttpQuery(endPoint, body);
 
-    HttpResponse<String> response = HttpClient
-            .newBuilder()
-            .build()
-            .send(request, HttpResponse.BodyHandlers.ofString());
-
-    return DatabricksManager.buildHttpResponse(response);
+    return DatabricksManager.buildHttpResponse(client.newCall(request).execute());
   }
 
-  private static CompletableFuture<JSONObject> apiAsyncCall(String endPoint, String method, JSONObject body) throws Exception {
-    HttpRequest request = DatabricksManager.buildHttpQuery(endPoint, method, body);
+  private static CompletableFuture<JSONObject> apiAsyncCall(String endPoint, JSONObject body) throws Exception {
+    OkHttpClient client = new OkHttpClient
+            .Builder()
+            .connectTimeout(timeOut, TimeUnit.SECONDS)
+            .writeTimeout(timeOut, TimeUnit.SECONDS)
+            .readTimeout(timeOut, TimeUnit.SECONDS)
+            .build();
+    Request request = DatabricksManager.buildHttpQuery(endPoint, body);
+    CompletableFuture<JSONObject> responseFuture = new CompletableFuture<>();
 
-     return HttpClient
-             .newBuilder()
-             .build()
-             .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-             .thenApply((response) -> {
-               try {
-                 return DatabricksManager.buildHttpResponse(response);
-               } catch (Exception e) {
-                 e.printStackTrace();
-                 return null;
-               }
-             });
+    client.newCall(request).enqueue(new Callback() {
+      @Override public void onFailure(Call call, IOException e) {
+        e.printStackTrace();
+        responseFuture.complete(null);
+        client.dispatcher().executorService().shutdown();
+      }
+
+      @Override public void onResponse(Call call, Response response) {
+        try {
+          responseFuture.complete(DatabricksManager.buildHttpResponse(response));
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+        client.dispatcher().executorService().shutdown();
+      }
+    });
+
+    return responseFuture;
   }
 
   private static CompletableFuture<Boolean> checkState(String targetState, List<String> allowedState) {
@@ -121,12 +128,11 @@ public class DatabricksManager {
 
     DatabricksManager.apiSyncCall(
             "api/2.0/clusters/resize",
-            "POST",
             body);
 
     if(wait) {
       System.out.println("Waiting for the end of resizing : this action can take up to " + maxStateCheck*periodStateCheck/1000 + "s");
-      boolean result = DatabricksManager.checkState("RUNNING", List.of("RUNNING", "RESIZING")).get();
+      boolean result = DatabricksManager.checkState("RUNNING", Arrays.asList("RUNNING", "RESIZING")).get();
 
       if (!result) {
         throw new Exception("Error while providing new workers to the cluster");
@@ -142,13 +148,12 @@ public class DatabricksManager {
 
     CompletableFuture<JSONObject> response = DatabricksManager.apiAsyncCall(
             "api/2.0/clusters/resize",
-            "POST",
             body);
 
     if(wait) {
       response = response.thenApply((r) -> {
         try {
-          boolean result = DatabricksManager.checkState("RUNNING", List.of("RUNNING", "RESIZING")).get();
+          boolean result = DatabricksManager.checkState("RUNNING", Arrays.asList("RUNNING", "RESIZING")).get();
           if (!result) {
             throw new Exception("Error while providing new workers to the cluster");
           }
@@ -169,7 +174,6 @@ public class DatabricksManager {
 
     return DatabricksManager.apiSyncCall(
             "api/2.0/clusters/get",
-            "POST",
             body);
   }
 
@@ -179,7 +183,6 @@ public class DatabricksManager {
 
     return DatabricksManager.apiAsyncCall(
             "api/2.0/clusters/get",
-            "POST",
             body);
   }
 }
