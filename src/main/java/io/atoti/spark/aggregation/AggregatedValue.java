@@ -3,7 +3,7 @@ package io.atoti.spark.aggregation;
 import org.apache.spark.sql.Column;
 
 public sealed interface AggregatedValue
-    permits Avg, Count, Max, Min, Multiply, Quantile, QuantileIndex, Sum, SumArray, VectorAt {
+    permits Avg, Count, Max, Min, QuantileIndex, Sum, SumArray, VectorAt {
 
   /**
    * Returns the name of the aggregated value.

@@ -2,6 +2,7 @@ package io.atoti.spark;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -21,7 +22,7 @@ public class Utils {
 		);
 	}
 
-	public static Seq<Integer> convertToArrayListToScalaArraySeq(ArrayList<Integer> arr) {
+	public static Seq<Long> convertToArrayListToScalaArraySeq(List<Long> arr) {
 		return JavaConverters.asScala(arr).iterator().toSeq();
 	}
 	
