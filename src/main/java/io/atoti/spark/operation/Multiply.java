@@ -7,7 +7,6 @@ import static org.apache.spark.sql.functions.udf;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.spark.sql.Column;
@@ -19,9 +18,9 @@ import scala.collection.immutable.ArraySeq;
 
 public final class Multiply implements Operation {
 			
-	private static UserDefinedFunction udf = udf((Long x, ArraySeq<Integer> s) -> {
-		ArrayList<Integer> list = convertScalaArrayToArray(s);
-		return convertToArrayListToScalaArraySeq(list.stream().map((Integer value) -> value * x).toList());
+	private static UserDefinedFunction udf = udf((Long x, ArraySeq<Long> s) -> {
+		ArrayList<Long> list = convertScalaArrayToArray(s);
+		return convertToArrayListToScalaArraySeq(list.stream().map((Long value) -> value * x).toList());
 	}, DataTypes.createArrayType(DataTypes.LongType));
 	
 	private String name;

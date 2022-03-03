@@ -15,8 +15,8 @@ record ArrayElement(int index, int value) {}
 
 public class Utils {
 
-	public static ArrayList<Integer> convertScalaArrayToArray(ArraySeq<Integer> arr) {
-		return new ArrayList<Integer>(JavaConverters
+	public static ArrayList<Long> convertScalaArrayToArray(ArraySeq<Long> arr) {
+		return new ArrayList<Long>(JavaConverters
 				.asJavaCollectionConverter(arr)
 				.asJavaCollection()
 		);

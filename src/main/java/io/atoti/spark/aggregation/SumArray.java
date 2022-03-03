@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
+
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Encoder;
 import org.apache.spark.sql.Row;
@@ -18,9 +19,9 @@ public final class SumArray implements AggregatedValue, Serializable {
 
   public String name;
   public String column;
-  private Aggregator<Row, int[], int[]> udaf;
+  private Aggregator<Row, long[], long[]> udaf;
 
-  private static int[] sum(int[] a, int[] b) {
+  private static long[] sum(long[] a, long[] b) {
     if (a.length == 0) {
       return b;
     }
@@ -30,55 +31,55 @@ public final class SumArray implements AggregatedValue, Serializable {
     if (a.length != b.length) {
       throw new UnsupportedOperationException("Cannot sum arrays of different size");
     }
-    return IntStream.range(0, a.length).map((int i) -> a[i] + b[i]).toArray();
+    return IntStream.range(0, a.length).mapToLong((int i) -> a[i] + b[i]).toArray();
   }
 
-  public SumArray(String name, String column, Encoder<int[]> encoder) {
+  public SumArray(String name, String column, Encoder<long[]> encoder) {
     Objects.requireNonNull(name, "No name provided");
     Objects.requireNonNull(column, "No column provided");
     this.name = name;
     this.column = column;
     udaf =
-        new Aggregator<Row, int[], int[]>() {
+        new Aggregator<Row, long[], long[]>() {
 		  private static final long serialVersionUID = -6760989932234595260L;
 
 		@Override
-          public Encoder<int[]> bufferEncoder() {
+          public Encoder<long[]> bufferEncoder() {
             return encoder;
           }
 
           @Override
-          public int[] finish(int[] reduction) {
+          public long[] finish(long[] reduction) {
             return reduction;
           }
 
           @Override
-          public int[] merge(int[] b1, int[] b2) {
+          public long[] merge(long[] b1, long[] b2) {
             return sum(b1, b2);
           }
 
           @Override
-          public Encoder<int[]> outputEncoder() {
+          public Encoder<long[]> outputEncoder() {
             return encoder;
           }
 
           @SuppressWarnings("unchecked")
           @Override
-          public int[] reduce(int[] b, Row a) {
-            ArraySeq<Integer> arraySeq;
+          public long[] reduce(long[] b, Row a) {
+            ArraySeq<Long> arraySeq;
             try {
-              arraySeq = (ArraySeq<Integer>) a.getAs(column);
+              arraySeq = (ArraySeq<Long>) a.getAs(column);
             } catch (ClassCastException e) {
               throw new UnsupportedOperationException("Column did not contains only arrays");
             }
-            List<Integer> list = CollectionConverters.SeqHasAsJava(arraySeq).asJava();
-            int[] array = list.stream().mapToInt(i -> i).toArray();
+            List<Long> list = CollectionConverters.SeqHasAsJava(arraySeq).asJava();
+            long[] array = list.stream().mapToLong(i -> i).toArray();
             return sum(array, b);
           }
 
           @Override
-          public int[] zero() {
-            return new int[0];
+          public long[] zero() {
+            return new long[0];
           }
         };
   }

@@ -40,7 +40,7 @@ public class CsvReader {
             // This prototype only supports arrays of integers
             dataframe =
                 dataframe.withColumn(
-                    col, functions.split(functions.col(col), ",").cast("array<int>"));
+                    col, functions.split(functions.col(col), ",").cast("array<long>"));
           }
         }
       }
