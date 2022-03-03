@@ -2,7 +2,6 @@ package io.atoti.spark.operation;
 
 import static org.apache.spark.sql.functions.col;
 
-import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.spark.sql.Column;
@@ -13,7 +12,8 @@ public sealed abstract class Operation permits Multiply, Quantile, QuantileIndex
 	
 	protected String name;
 	protected Column column;
-	protected List<Object> neededColumns;
+	protected Stream<AggregatedValue> neededAggregations;
+	protected Stream<Operation> neededOperations;
 	
 	public Column toAggregateColumn() {
 		return this.column;
@@ -27,26 +27,10 @@ public sealed abstract class Operation permits Multiply, Quantile, QuantileIndex
 	}
 	
 	public Stream<AggregatedValue> getNeededAggregations() {
-		return this.neededColumns.stream().flatMap((Object c) -> {
-			if (c instanceof AggregatedValue) {
-				  return List.of((AggregatedValue) c).stream();
-			  } else if (c instanceof Operation) {
-				  return ((Operation) c).getNeededAggregations();
-			  } else {
-				  throw new IllegalArgumentException("Unsupported type");
-			  }
-		});
+		return Stream.concat(this.neededAggregations.flatMap((AggregatedValue agg) -> Stream.of(agg)), this.neededOperations.flatMap((Operation op) -> op.getNeededAggregations()));
 	}
 	
 	public Stream<Operation> getAllOperations() {
-		return Stream.concat(this.neededColumns.stream().flatMap((Object c) -> {
-			if (c instanceof AggregatedValue) {
-				  return Stream.empty();
-			  } else if (c instanceof Operation) {
-				  return ((Operation) c).getAllOperations();
-			  } else {
-				  throw new IllegalArgumentException("Unsupported type");
-			  }
-		}), List.of(this).stream());
+		return Stream.concat(this.neededOperations.flatMap((Operation op) -> op.getAllOperations()), Stream.of(this));
 	}
 }
