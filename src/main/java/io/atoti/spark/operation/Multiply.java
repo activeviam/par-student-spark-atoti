@@ -16,7 +16,7 @@ import org.apache.spark.sql.types.DataTypes;
 import io.atoti.spark.aggregation.AggregatedValue;
 import scala.collection.immutable.ArraySeq;
 
-public final class Multiply implements Operation {
+public final class Multiply extends Operation {
 			
 	private static UserDefinedFunction udf = udf((Long x, ArraySeq<Long> s) -> {
 		ArrayList<Long> list = convertScalaArrayToArray(s);
