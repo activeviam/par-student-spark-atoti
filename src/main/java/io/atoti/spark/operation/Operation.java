@@ -9,7 +9,7 @@ import org.apache.spark.sql.Column;
 
 import io.atoti.spark.aggregation.AggregatedValue;
 
-public sealed abstract class Operation permits Multiply, Quantile, QuantileIndex {
+public sealed abstract class Operation permits Multiply, Quantile, QuantileIndex, VectorAt {
 	
 	protected String name;
 	protected Column column;

@@ -14,12 +14,12 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
 
-import io.atoti.spark.aggregation.Multiply;
-import io.atoti.spark.aggregation.Quantile;
-import io.atoti.spark.aggregation.QuantileIndex;
 import io.atoti.spark.aggregation.Sum;
 import io.atoti.spark.aggregation.SumArray;
-import io.atoti.spark.aggregation.VectorAt;
+import io.atoti.spark.operation.Multiply;
+import io.atoti.spark.operation.Quantile;
+import io.atoti.spark.operation.QuantileIndex;
+import io.atoti.spark.operation.VectorAt;
 
 public class TestVectorAggregation {
 	
@@ -30,25 +30,9 @@ public class TestVectorAggregation {
   void quantile() {
 	  final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
 	  var price_simulations = new SumArray("price_simulations_sum", "price_simulations", spark.implicits().newIntArrayEncoder());
-	  // final var newDf = dataframe.withColumn(price_simulations.name, price_simulations.toAggregateColumn());
-	  var getHead = new Quantile("quantile", price_simulations, 95f);
-	  var df = AggregateQuery.aggregate(dataframe, List.of("id", "price_simulations"), List.of(price_simulations, getHead));
+	  var quantile = new Quantile("quantile", price_simulations, 95f);
+	  var df = AggregateQuery.aggregate(dataframe, List.of("id", "price_simulations"), List.of(price_simulations), List.of(quantile));
 	  df.show();
-  }
-  
-  @Test
-  void twoAggregations() {
-	  final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
-	  
-	  var sum_simulations = new SumArray("sum_simulations", "price_simulations", spark.implicits().newIntArrayEncoder());
-	  var firstAgg = AggregateQuery.aggregate(dataframe, List.of("id"), List.of(sum_simulations));
-	  
-	  firstAgg.show();
-	  
-	  var quantile = new Quantile("quantile", sum_simulations, 95f);
-	  var secondAgg = AggregateQuery.aggregate(firstAgg, List.of("id", "sum_simulations"), List.of(quantile));
-	  
-	  secondAgg.show();
   }
   
   @Test
@@ -56,7 +40,7 @@ public class TestVectorAggregation {
 	  final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
 	  var price_simulations = new SumArray("price_simulations_bis", "price_simulations", spark.implicits().newIntArrayEncoder());
 	  var vectorAt = new VectorAt("vector-at", price_simulations, 1);
-	  var df = AggregateQuery.aggregate(dataframe, List.of("id", "price_simulations"), List.of(vectorAt));
+	  var df = AggregateQuery.aggregate(dataframe, List.of("id", "price_simulations"), List.of(), List.of(vectorAt));
 	  df.show();
   }
   
@@ -75,14 +59,16 @@ public class TestVectorAggregation {
   @Test
   void vectorScaling() {
     final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
+    final var f_vector = new Multiply(
+        "f * vector",
+        new Sum("f", "price"),
+        new SumArray("sum(vector)", "price_simulations",  spark.implicits().newIntArrayEncoder())
+    );
     AggregateQuery.aggregate(
             dataframe,
             List.of("id"),
-            List.of(
-                new Multiply(
-                    "f * vector",
-                    new Sum("f", "price"),
-                    new SumArray("sum(vector)", "price_simulations"))))
+            List.of(),
+            List.of(f_vector))
         .collectAsList();
   }
 
@@ -92,6 +78,7 @@ public class TestVectorAggregation {
     AggregateQuery.aggregate(
             dataframe,
             List.of("simulation"),
+            List.of(),
             List.of(
                 new QuantileIndex(
                     "i95%",
@@ -113,6 +100,7 @@ public class TestVectorAggregation {
         AggregateQuery.aggregate(
                 dataframe,
                 List.of("simulation"),
+                List.of(),
                 List.of(
                     new Quantile("v95%", revenues, 95f), new QuantileIndex("i95%", revenues, 95f)))
             .collectAsList();
@@ -133,6 +121,7 @@ public class TestVectorAggregation {
     AggregateQuery.aggregate(
             dataframe,
             List.of("category"),
+            List.of(),
             List.of(
                 new VectorAt("revenue-at-best", revenues, bestSimulation),
                 new VectorAt("revenue-at-worst", revenues, worstSimulation)))
