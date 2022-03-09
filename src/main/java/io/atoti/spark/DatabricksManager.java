@@ -15,61 +15,52 @@ import java.util.concurrent.TimeUnit;
 
 public class DatabricksManager {
   static Dotenv dotenv = Dotenv.load();
-  static private final String clusterId = dotenv.get("clusterId");
-  static private final String token = dotenv.get("token");
-  static private final String clusterUrl = dotenv.get("clusterUrl");
-  static private final int timeOut = 10;
-  static private final int delayBeforeStateCheck = 1000;
-  static private final int periodStateCheck = 5000;
-  static private final int maxStateCheck = 60;
+  static private final String CLUSTER_ID = dotenv.get("clusterId");
+  static private final String TOKEN = dotenv.get("token");
+  static private final String CLUSTER_URL = dotenv.get("clusterUrl");
+  static private final int TIME_OUT = 10;
+  static private final int DELAY_BEFORE_STATE_CHECK = 1000;
+  static private final int PERIOD_STATE_CHECK = 5000;
+  static private final int MAX_STATE_CHECK = 60;
   static private final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
-  private static Request buildHttpQuery(String endPoint, JSONObject body) throws Exception {
+  private static Request buildHttpQuery(String endPoint, JSONObject body) {
     Request.Builder requestBuilder = new Request
             .Builder()
-            .url(clusterUrl + endPoint)
+            .url(CLUSTER_URL + endPoint)
             .post(RequestBody.create(body.toString(), JSON));
 
     return requestBuilder
             .header("Content-Type","application/json")
-            .addHeader("Authorization", "Bearer " + token)
+            .addHeader("Authorization", "Bearer " + TOKEN)
             .build();
   }
 
-  private static JSONObject buildHttpResponse(Response response) throws Exception {
+  private static JSONObject buildHttpResponse(Response response) {
     if (response.isSuccessful()) {
-      return new JSONObject(response.body().string());
+      try {
+        return new JSONObject(response.body().string());
+      } catch (Exception e) {
+        throw new RuntimeException(response.toString());
+      }
     } else {
-      throw new Exception(response.toString());
+      throw new RuntimeException(response.toString());
     }
   }
 
-  private static JSONObject apiSyncCall(String endPoint, JSONObject body) throws Exception {
+  private static CompletableFuture<JSONObject> apiAsyncCall(String endPoint, JSONObject body) {
     OkHttpClient client = new OkHttpClient
             .Builder()
-            .connectTimeout(timeOut, TimeUnit.SECONDS)
-            .writeTimeout(timeOut, TimeUnit.SECONDS)
-            .readTimeout(timeOut, TimeUnit.SECONDS)
-            .build();
-    Request request = DatabricksManager.buildHttpQuery(endPoint, body);
-
-    return DatabricksManager.buildHttpResponse(client.newCall(request).execute());
-  }
-
-  private static CompletableFuture<JSONObject> apiAsyncCall(String endPoint, JSONObject body) throws Exception {
-    OkHttpClient client = new OkHttpClient
-            .Builder()
-            .connectTimeout(timeOut, TimeUnit.SECONDS)
-            .writeTimeout(timeOut, TimeUnit.SECONDS)
-            .readTimeout(timeOut, TimeUnit.SECONDS)
+            .connectTimeout(TIME_OUT, TimeUnit.SECONDS)
+            .writeTimeout(TIME_OUT, TimeUnit.SECONDS)
+            .readTimeout(TIME_OUT, TimeUnit.SECONDS)
             .build();
     Request request = DatabricksManager.buildHttpQuery(endPoint, body);
     CompletableFuture<JSONObject> responseFuture = new CompletableFuture<>();
 
     client.newCall(request).enqueue(new Callback() {
       @Override public void onFailure(Call call, IOException e) {
-        e.printStackTrace();
-        responseFuture.complete(null);
+        responseFuture.completeExceptionally(e);
         client.dispatcher().executorService().shutdown();
       }
 
@@ -77,7 +68,7 @@ public class DatabricksManager {
         try {
           responseFuture.complete(DatabricksManager.buildHttpResponse(response));
         } catch (Exception e) {
-          e.printStackTrace();
+          responseFuture.completeExceptionally(e);
         }
         client.dispatcher().executorService().shutdown();
       }
@@ -86,8 +77,8 @@ public class DatabricksManager {
     return responseFuture;
   }
 
-  private static CompletableFuture<Boolean> checkState(String targetState, List<String> allowedState) {
-    CompletableFuture<Boolean> ready = new CompletableFuture<>();
+  private static CompletableFuture<JSONObject> checkState(String targetState, List<String> allowedState, JSONObject previousResponse) {
+    CompletableFuture<JSONObject> ready = new CompletableFuture<>();
 
     Timer timer = new Timer();
     timer.scheduleAtFixedRate(new TimerTask() {
@@ -99,51 +90,38 @@ public class DatabricksManager {
         try {
           JSONObject response = DatabricksManager.state();
           if(response.get("state").toString().equals(targetState)) {
-            ready.complete(true);
+            ready.complete(previousResponse);
             timer.cancel();
           } else if(!allowedState.contains(response.get("state").toString())) {
-            ready.complete(false);
+            ready.completeExceptionally(new Exception("Cluster is in an illegal state: " + response.get("state").toString()));
             timer.cancel();
           }
         } catch (Exception e) {
-          e.printStackTrace();
-          ready.complete(false);
+          ready.completeExceptionally(e);
           timer.cancel();
         }
 
-        if(count >= maxStateCheck) {
-          ready.complete(false);
+        if(count >= MAX_STATE_CHECK) {
+          ready.completeExceptionally(new Exception("The cluster has not reached the " + targetState + " state after the allowed time"));
           timer.cancel();
         }
       }
-    }, delayBeforeStateCheck,periodStateCheck);
+    }, DELAY_BEFORE_STATE_CHECK, PERIOD_STATE_CHECK);
 
     return ready;
   }
 
-  public static void resize(int workerNumber, boolean wait) throws Exception {
-    JSONObject body = new JSONObject();
-    body.put("cluster_id", clusterId);
-    body.put("num_workers", workerNumber);
-
-    DatabricksManager.apiSyncCall(
-            "api/2.0/clusters/resize",
-            body);
-
-    if(wait) {
-      System.out.println("Waiting for the end of resizing : this action can take up to " + maxStateCheck*periodStateCheck/1000 + "s");
-      boolean result = DatabricksManager.checkState("RUNNING", Arrays.asList("RUNNING", "RESIZING")).get();
-
-      if (!result) {
-        throw new Exception("Error while providing new workers to the cluster");
-      }
-      System.out.println("The cluster has been resized successfully!");
+  public static JSONObject resize(int workerNumber, boolean wait) {
+    try {
+      return DatabricksManager.resizeAsync(workerNumber, wait).get();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
   }
 
-  public static CompletableFuture<JSONObject> resizeAsync(int workerNumber, boolean wait) throws Exception {
+  public static CompletableFuture<JSONObject> resizeAsync(int workerNumber, boolean wait) {
     JSONObject body = new JSONObject();
-    body.put("cluster_id", clusterId);
+    body.put("cluster_id", CLUSTER_ID);
     body.put("num_workers", workerNumber);
 
     CompletableFuture<JSONObject> response = DatabricksManager.apiAsyncCall(
@@ -151,35 +129,25 @@ public class DatabricksManager {
             body);
 
     if(wait) {
-      response = response.thenApply((r) -> {
-        try {
-          boolean result = DatabricksManager.checkState("RUNNING", Arrays.asList("RUNNING", "RESIZING")).get();
-          if (!result) {
-            throw new Exception("Error while providing new workers to the cluster");
-          }
-          return r;
-        } catch (Exception e) {
-          e.printStackTrace();
-          return null;
-        }
-      });
+      response = response.thenCompose(
+              (r) -> DatabricksManager.checkState("RUNNING", Arrays.asList("RUNNING", "RESIZING"), r)
+      );
     }
 
     return response;
   }
 
-  public static JSONObject state() throws Exception {
-    JSONObject body = new JSONObject();
-    body.put("cluster_id", clusterId);
-
-    return DatabricksManager.apiSyncCall(
-            "api/2.0/clusters/get",
-            body);
+  public static JSONObject state() {
+    try {
+      return DatabricksManager.stateAsync().get();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  public static CompletableFuture<JSONObject> stateAsync() throws Exception {
+  public static CompletableFuture<JSONObject> stateAsync() {
     JSONObject body = new JSONObject();
-    body.put("cluster_id", clusterId);
+    body.put("cluster_id", CLUSTER_ID);
 
     return DatabricksManager.apiAsyncCall(
             "api/2.0/clusters/get",
