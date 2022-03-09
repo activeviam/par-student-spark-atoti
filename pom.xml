@@ -13,6 +13,8 @@
     <java.version>16</java.version>
     <junit.version>5.8.1</junit.version>
     <jmh.version>1.3.3</jmh.version>
+    <maven.compiler.source>16</maven.compiler.source>
+    <maven.compiler.target>16</maven.compiler.target>
   </properties>
 
   <dependencies>
