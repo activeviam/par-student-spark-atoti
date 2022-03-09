@@ -11,10 +11,9 @@ import scala.collection.JavaConverters;
 import scala.collection.immutable.ArraySeq;
 import scala.collection.immutable.Seq;
 
-record ArrayElement(int index, int value) {}
+record ArrayElement(int index, long value) {}
 
 public class Utils {
-
 	public static ArrayList<Long> convertScalaArrayToArray(ArraySeq<Long> arr) {
 		return new ArrayList<Long>(JavaConverters
 				.asJavaCollectionConverter(arr)
@@ -26,10 +25,12 @@ public class Utils {
 		return JavaConverters.asScala(arr).iterator().toSeq();
 	}
 	
-	public static PriorityQueue<ArrayElement> constructMaxHeap(ArrayList<Integer> arr) {
-		var pq = new PriorityQueue<ArrayElement>(
-			(ArrayElement a, ArrayElement b) -> b.value() - a.value()
-		);
+	public static long t (ArrayElement a, ArrayElement b) {
+		return b.value() - a.value();
+	}
+	
+	public static PriorityQueue<ArrayElement> constructMaxHeap(ArrayList<Long> arr) {
+		var pq = new PriorityQueue<ArrayElement>((ArrayElement a, ArrayElement b) -> Long.compare(a.value(), b.value()));
 		pq.addAll(IntStream.range(0, arr.size())
 				.mapToObj((int k) -> new ArrayElement(k, arr.get(k)))
 				.collect(Collectors.toList())
@@ -37,7 +38,7 @@ public class Utils {
 		return pq;
 	}
 	
-	public static int quantile(ArrayList<Integer> arr, float percent) {
+	public static long quantile(ArrayList<Long> arr, float percent) {
 		var pq = constructMaxHeap(arr);
 		int index = (int)Math.ceil(arr.size() * percent / 100);
 		
@@ -49,7 +50,7 @@ public class Utils {
 		return (k.value() + pq.peek().value()) / 2;
 	}
 	
-	public static int quantileIndex(ArrayList<Integer> arr, float percent) {
+	public static long quantileIndex(ArrayList<Long> arr, float percent) {
 		var pq = constructMaxHeap(arr);
 		int index = (int)Math.ceil(arr.size() * percent / 100);
 		

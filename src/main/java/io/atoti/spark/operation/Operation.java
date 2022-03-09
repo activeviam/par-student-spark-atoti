@@ -2,6 +2,7 @@ package io.atoti.spark.operation;
 
 import static org.apache.spark.sql.functions.col;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.spark.sql.Column;
@@ -12,8 +13,8 @@ public sealed abstract class Operation permits Multiply, Quantile, QuantileIndex
 	
 	protected String name;
 	protected Column column;
-	protected Stream<AggregatedValue> neededAggregations;
-	protected Stream<Operation> neededOperations;
+	protected List<AggregatedValue> neededAggregations;
+	protected List<Operation> neededOperations;
 	
 	public Column toAggregateColumn() {
 		return this.column;
@@ -27,10 +28,36 @@ public sealed abstract class Operation permits Multiply, Quantile, QuantileIndex
 	}
 	
 	public Stream<AggregatedValue> getNeededAggregations() {
-		return Stream.concat(this.neededAggregations.flatMap((AggregatedValue agg) -> Stream.of(agg)), this.neededOperations.flatMap((Operation op) -> op.getNeededAggregations()));
+		return Stream.concat(this.neededAggregations.stream(), this.neededOperations.stream().flatMap(Operation::getNeededAggregations));
 	}
 	
 	public Stream<Operation> getAllOperations() {
-		return Stream.concat(this.neededOperations.flatMap((Operation op) -> op.getAllOperations()), Stream.of(this));
+		return Stream.concat(this.neededOperations.stream().flatMap(Operation::getAllOperations), Stream.of(this));
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+            return false;
+        }
+
+        if (obj.getClass() != this.getClass()) {
+            return false;
+        }
+
+        final Operation op = (Operation) obj;
+        return op.name.equals(this.name)
+        		&& op.neededAggregations.equals(this.neededAggregations)
+        		&& op.neededOperations.equals(this.neededOperations);
+     }
+
+	@Override
+	public String toString() {
+		return name + " | " + neededAggregations + " | " + neededOperations;
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.toString().hashCode();
 	}
 }

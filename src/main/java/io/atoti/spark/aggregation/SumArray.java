@@ -11,6 +11,7 @@ import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Encoder;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.expressions.Aggregator;
+
 import scala.collection.mutable.ArraySeq;
 import scala.jdk.CollectionConverters;
 
@@ -95,4 +96,28 @@ public final class SumArray implements AggregatedValue, Serializable {
   public String toSqlQuery() {
     throw new UnsupportedOperationException("TODO");
   }
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+          return false;
+      }
+
+      if (obj.getClass() != this.getClass()) {
+          return false;
+      }
+
+      final SumArray sumArray = (SumArray) obj;
+      return sumArray.name.equals(this.name) && sumArray.column.equals(this.column);
+   }
+	
+	@Override
+	public String toString() {
+		return name + " | " + column;
+	}
+	
+	@Override
+		public int hashCode() {
+			return this.toString().hashCode();
+		}
 }

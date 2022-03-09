@@ -7,7 +7,6 @@ import static org.apache.spark.sql.functions.udf;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.expressions.UserDefinedFunction;
@@ -22,105 +21,71 @@ public final class Multiply extends Operation {
 		ArrayList<Long> list = convertScalaArrayToArray(s);
 		return convertToArrayListToScalaArraySeq(list.stream().map((Long value) -> value * x).toList());
 	}, DataTypes.createArrayType(DataTypes.LongType));
-	
-	private String name;
-	private Column column;
-	private List<Object> neededColumns;
 
 	  public Multiply(String name, String scalarColumn, String arrayColumn) {
 		  this.name = name;
 		  this.column = Multiply.udf.apply(col(scalarColumn), col(arrayColumn)).alias(name);
-		  this.neededColumns = List.of();
+			this.neededAggregations = List.of();
+			this.neededOperations = List.of();
 	  }
 
 	  public Multiply(String name, String scalarColumn, AggregatedValue arrayColumn) {
 		  this.name = name;
 		  this.column = Multiply.udf.apply(col(scalarColumn), arrayColumn.toColumn()).alias(name);
-		  this.neededColumns = List.of(arrayColumn);
+			this.neededAggregations = List.of(arrayColumn);
+			this.neededOperations = List.of();
 	  }
 
 	  public Multiply(String name, String scalarColumn, Operation arrayColumn) {
 		  this.name = name;
 		  this.column = Multiply.udf.apply(col(scalarColumn), arrayColumn.toColumn()).alias(name);
-		  this.neededColumns = List.of(arrayColumn);
+			this.neededAggregations = List.of();
+			this.neededOperations = List.of(arrayColumn);
 	  }
 
 	  public Multiply(String name, AggregatedValue scalarColumn, String arrayColumn) {
 		  this.name = name;
 		  this.column = Multiply.udf.apply(scalarColumn.toColumn(), col(arrayColumn)).alias(name);
-		  this.neededColumns = List.of(scalarColumn);
+			this.neededAggregations = List.of(scalarColumn);
+			this.neededOperations = List.of();
 	  }
 
 	  public Multiply(String name, AggregatedValue scalarColumn, AggregatedValue arrayColumn) {
 		  this.name = name;
 		  this.column = Multiply.udf.apply(scalarColumn.toColumn(), arrayColumn.toColumn()).alias(name);
-		  this.neededColumns = List.of(scalarColumn, arrayColumn);
+			this.neededAggregations = List.of(scalarColumn, arrayColumn);
+			this.neededOperations = List.of();
 	  }
 
 	  public Multiply(String name, AggregatedValue scalarColumn, Operation arrayColumn) {
 		  this.name = name;
 		  this.column = Multiply.udf.apply(scalarColumn.toColumn(), arrayColumn.toColumn()).alias(name);
-		  this.neededColumns = List.of(scalarColumn, arrayColumn);
+			this.neededAggregations = List.of(scalarColumn);
+			this.neededOperations = List.of(arrayColumn);
 	  }
 
 	  public Multiply(String name, Operation scalarColumn, String arrayColumn) {
 		  this.name = name;
 		  this.column = Multiply.udf.apply(scalarColumn.toColumn(), col(arrayColumn)).alias(name);
-		  this.neededColumns = List.of(scalarColumn);
+			this.neededAggregations = List.of();
+			this.neededOperations = List.of(scalarColumn);
 	  }
 
 	  public Multiply(String name, Operation scalarColumn, AggregatedValue arrayColumn) {
 		  this.name = name;
 		  this.column = Multiply.udf.apply(scalarColumn.toColumn(), arrayColumn.toColumn()).alias(name);
-		  this.neededColumns = List.of(scalarColumn, arrayColumn);
+			this.neededAggregations = List.of(arrayColumn);
+			this.neededOperations = List.of(scalarColumn);
 	  }
 
 	  public Multiply(String name, Operation scalarColumn, Operation arrayColumn) {
 		  this.name = name;
 		  this.column = Multiply.udf.apply(scalarColumn.toColumn(), arrayColumn.toColumn()).alias(name);
-		  this.neededColumns = List.of(scalarColumn, arrayColumn);
+			this.neededAggregations = List.of();
+			this.neededOperations = List.of(scalarColumn, arrayColumn);
 	  }
 
   public Column toAggregateColumn() {
 	  return this.column;
   }
-  @Override
-  public Column toColumn() {
-    return col(this.name);
-  }
-  
-  @Override
-  public String getName() {
-	  return this.name;
-  }
-
-  public String toSqlQuery() {
-    throw new UnsupportedOperationException("TODO");
-  }
-
-	@Override
-	public Stream<AggregatedValue> getNeededAggregations() {
-		return this.neededColumns.stream().flatMap((Object c) -> {
-			if (c instanceof AggregatedValue) {
-				  return List.of((AggregatedValue) c).stream();
-			  } else if (c instanceof Operation) {
-				  return ((Operation) c).getNeededAggregations();
-			  } else {
-				  throw new IllegalArgumentException("Unsupported type");
-			  }
-		});
-	}
-
-	@Override
-	public Stream<Operation> getAllOperations() {
-		return Stream.concat(this.neededColumns.stream().flatMap((Object c) -> {
-			if (c instanceof AggregatedValue) {
-				  return Stream.empty();
-			  } else if (c instanceof Operation) {
-				  return ((Operation) c).getAllOperations();
-			  } else {
-				  throw new IllegalArgumentException("Unsupported type");
-			  }
-		}), List.of(this).stream());
-	}
 }

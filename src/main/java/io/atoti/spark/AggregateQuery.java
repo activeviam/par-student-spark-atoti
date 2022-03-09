@@ -65,8 +65,8 @@ public class AggregateQuery {
 	    System.arraycopy(createdOperationColumns, 0, columnsToSelect, columns.length + createdAggregatedColumns.length, createdOperationColumns.length);
 	    
 		// Add needed aggregations for operations to the `aggregations` list
-	    final List<AggregatedValue> neededAggregations = Stream.concat(operations.stream().flatMap((Operation op) -> op.getNeededAggregations()), aggregations.stream()).distinct().toList();
-	    		
+	    final List<AggregatedValue> neededAggregations = Stream.concat(operations.stream().flatMap(Operation::getNeededAggregations), aggregations.stream()).distinct().toList();
+	    
 	    // Aggregations
 	    if (!neededAggregations.isEmpty()) {
 		    final Column firstAggColumn = neededAggregations.get(0).toAggregateColumn();
@@ -82,7 +82,7 @@ public class AggregateQuery {
 	    
 	    // Operations
 	    if (!operations.isEmpty()) {
-		  for (Operation op : operations.stream().flatMap(Operation::getAllOperations).toList()) {
+		  for (Operation op : operations.stream().flatMap(Operation::getAllOperations).distinct().toList()) {
 			  dataframe = dataframe.withColumn(op.getName(), op.toAggregateColumn());
 		  }
 	    }

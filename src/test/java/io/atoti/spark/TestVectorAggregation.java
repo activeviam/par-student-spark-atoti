@@ -29,7 +29,7 @@ public class TestVectorAggregation {
   @Test
   void quantile() {
 	  final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
-	  var price_simulations = new SumArray("price_simulations_sum", "price_simulations", spark.implicits().newIntArrayEncoder());
+	  var price_simulations = new SumArray("price_simulations_sum", "price_simulations", spark.implicits().newLongArrayEncoder());
 	  var quantile = new Quantile("quantile", price_simulations, 95f);
 	  var df = AggregateQuery.aggregate(dataframe, List.of("id", "price_simulations"), List.of(price_simulations), List.of(quantile));
 	  df.show();
@@ -38,7 +38,7 @@ public class TestVectorAggregation {
   @Test
   void vectorAt() {
 	  final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
-	  var price_simulations = new SumArray("price_simulations_bis", "price_simulations", spark.implicits().newIntArrayEncoder());
+	  var price_simulations = new SumArray("price_simulations_bis", "price_simulations", spark.implicits().newLongArrayEncoder());
 	  var vectorAt = new VectorAt("vector-at", price_simulations, 1);
 	  var df = AggregateQuery.aggregate(dataframe, List.of("id", "price_simulations"), List.of(), List.of(vectorAt));
 	  df.show();
@@ -47,7 +47,7 @@ public class TestVectorAggregation {
   @Test
   void simpleAggregation() {
     final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
-    var sumVector = new SumArray("sum(vector)", "price_simulations", spark.implicits().newIntArrayEncoder());
+    var sumVector = new SumArray("sum(vector)", "price_simulations", spark.implicits().newLongArrayEncoder());
     System.out.println("LOGS");
     System.out.println(sumVector.toAggregateColumn());
     // dataframe.select(sumVector.toAggregateColumn());
@@ -62,7 +62,7 @@ public class TestVectorAggregation {
     final var f_vector = new Multiply(
         "f * vector",
         new Sum("f", "price"),
-        new SumArray("sum(vector)", "price_simulations",  spark.implicits().newIntArrayEncoder())
+        new SumArray("sum(vector)", "price_simulations",  spark.implicits().newLongArrayEncoder())
     );
     AggregateQuery.aggregate(
             dataframe,
