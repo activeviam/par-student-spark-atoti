@@ -116,6 +116,6 @@ public class TestDiscovery {
     assertThat(dataframe).isNotNull();
     assertThat(dTypes).isNotNull();
     assertThat(dTypes.get("price_simulations"))
-        .isEqualTo(DataTypes.createArrayType(DataTypes.IntegerType));
+        .isEqualTo(DataTypes.createArrayType(DataTypes.LongType));
   }
 }

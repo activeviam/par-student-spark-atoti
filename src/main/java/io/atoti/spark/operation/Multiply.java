@@ -23,65 +23,57 @@ public final class Multiply extends Operation {
 	}, DataTypes.createArrayType(DataTypes.LongType));
 
 	  public Multiply(String name, String scalarColumn, String arrayColumn) {
-		  this.name = name;
+		  super(name);
 		  this.column = Multiply.udf.apply(col(scalarColumn), col(arrayColumn)).alias(name);
-			this.neededAggregations = List.of();
-			this.neededOperations = List.of();
 	  }
 
 	  public Multiply(String name, String scalarColumn, AggregatedValue arrayColumn) {
-		  this.name = name;
+		  super(name);
 		  this.column = Multiply.udf.apply(col(scalarColumn), arrayColumn.toColumn()).alias(name);
 			this.neededAggregations = List.of(arrayColumn);
-			this.neededOperations = List.of();
 	  }
 
 	  public Multiply(String name, String scalarColumn, Operation arrayColumn) {
-		  this.name = name;
+		  super(name);
 		  this.column = Multiply.udf.apply(col(scalarColumn), arrayColumn.toColumn()).alias(name);
-			this.neededAggregations = List.of();
 			this.neededOperations = List.of(arrayColumn);
 	  }
 
 	  public Multiply(String name, AggregatedValue scalarColumn, String arrayColumn) {
-		  this.name = name;
+		  super(name);
 		  this.column = Multiply.udf.apply(scalarColumn.toColumn(), col(arrayColumn)).alias(name);
 			this.neededAggregations = List.of(scalarColumn);
-			this.neededOperations = List.of();
 	  }
 
 	  public Multiply(String name, AggregatedValue scalarColumn, AggregatedValue arrayColumn) {
-		  this.name = name;
+		  super(name);
 		  this.column = Multiply.udf.apply(scalarColumn.toColumn(), arrayColumn.toColumn()).alias(name);
 			this.neededAggregations = List.of(scalarColumn, arrayColumn);
-			this.neededOperations = List.of();
 	  }
 
 	  public Multiply(String name, AggregatedValue scalarColumn, Operation arrayColumn) {
-		  this.name = name;
+		  super(name);
 		  this.column = Multiply.udf.apply(scalarColumn.toColumn(), arrayColumn.toColumn()).alias(name);
 			this.neededAggregations = List.of(scalarColumn);
 			this.neededOperations = List.of(arrayColumn);
 	  }
 
 	  public Multiply(String name, Operation scalarColumn, String arrayColumn) {
-		  this.name = name;
+		  super(name);
 		  this.column = Multiply.udf.apply(scalarColumn.toColumn(), col(arrayColumn)).alias(name);
-			this.neededAggregations = List.of();
 			this.neededOperations = List.of(scalarColumn);
 	  }
 
 	  public Multiply(String name, Operation scalarColumn, AggregatedValue arrayColumn) {
-		  this.name = name;
+		  super(name);
 		  this.column = Multiply.udf.apply(scalarColumn.toColumn(), arrayColumn.toColumn()).alias(name);
 			this.neededAggregations = List.of(arrayColumn);
 			this.neededOperations = List.of(scalarColumn);
 	  }
 
 	  public Multiply(String name, Operation scalarColumn, Operation arrayColumn) {
-		  this.name = name;
+		  super(name);
 		  this.column = Multiply.udf.apply(scalarColumn.toColumn(), arrayColumn.toColumn()).alias(name);
-			this.neededAggregations = List.of();
 			this.neededOperations = List.of(scalarColumn, arrayColumn);
 	  }
 

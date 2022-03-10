@@ -16,6 +16,12 @@ public sealed abstract class Operation permits Multiply, Quantile, QuantileIndex
 	protected List<AggregatedValue> neededAggregations;
 	protected List<Operation> neededOperations;
 	
+	public Operation(String name) {
+		this.name = name;
+		this.neededAggregations = List.of();
+		this.neededOperations = List.of();
+	}
+	
 	public Column toAggregateColumn() {
 		return this.column;
 	}
