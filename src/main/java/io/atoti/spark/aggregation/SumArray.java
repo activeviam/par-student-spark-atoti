@@ -6,12 +6,10 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
-
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Encoder;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.expressions.Aggregator;
-
 import scala.collection.mutable.ArraySeq;
 import scala.jdk.CollectionConverters;
 
@@ -42,9 +40,9 @@ public final class SumArray implements AggregatedValue, Serializable {
     this.column = column;
     udaf =
         new Aggregator<Row, long[], long[]>() {
-		  private static final long serialVersionUID = -6760989932234595260L;
+          private static final long serialVersionUID = -6760989932234595260L;
 
-		@Override
+          @Override
           public Encoder<long[]> bufferEncoder() {
             return encoder;
           }
@@ -96,28 +94,28 @@ public final class SumArray implements AggregatedValue, Serializable {
   public String toSqlQuery() {
     throw new UnsupportedOperationException("TODO");
   }
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == null) {
-          return false;
-      }
 
-      if (obj.getClass() != this.getClass()) {
-          return false;
-      }
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) {
+      return false;
+    }
 
-      final SumArray sumArray = (SumArray) obj;
-      return sumArray.name.equals(this.name) && sumArray.column.equals(this.column);
-   }
-	
-	@Override
-	public String toString() {
-		return name + " | " + column;
-	}
-	
-	@Override
-		public int hashCode() {
-			return this.toString().hashCode();
-		}
+    if (obj.getClass() != this.getClass()) {
+      return false;
+    }
+
+    final SumArray sumArray = (SumArray) obj;
+    return sumArray.name.equals(this.name) && sumArray.column.equals(this.column);
+  }
+
+  @Override
+  public String toString() {
+    return name + " | " + column;
+  }
+
+  @Override
+  public int hashCode() {
+    return this.toString().hashCode();
+  }
 }

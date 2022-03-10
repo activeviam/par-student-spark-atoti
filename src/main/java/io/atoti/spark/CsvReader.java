@@ -10,7 +10,7 @@ import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.DataTypes;
 
 public class CsvReader {
-	
+
   public static Dataset<Row> read(String path, SparkSession session) {
     return CsvReader.read(path, session, ";");
   }

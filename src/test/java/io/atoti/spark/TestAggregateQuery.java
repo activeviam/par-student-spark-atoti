@@ -114,5 +114,4 @@ class TestAggregateQuery {
                     .collectAsList())
         .isInstanceOf(IllegalArgumentException.class);
   }
-
 }
