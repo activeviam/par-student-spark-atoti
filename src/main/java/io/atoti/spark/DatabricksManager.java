@@ -41,7 +41,7 @@ public class DatabricksManager {
       try {
         return new JSONObject(response.body().string());
       } catch (Exception e) {
-        throw new RuntimeException(response.toString());
+        throw new RuntimeException(e);
       }
     } else {
       throw new RuntimeException(response.toString());
