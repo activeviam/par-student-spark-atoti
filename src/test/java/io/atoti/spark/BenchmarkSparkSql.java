@@ -3,8 +3,7 @@ package io.atoti.spark;
 import io.atoti.spark.aggregation.*;
 import io.atoti.spark.condition.EqualCondition;
 import io.atoti.spark.condition.QueryCondition;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.spark.sql.*;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -12,20 +11,24 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 @State(Scope.Benchmark)
 @Fork(
     value = 1,
     jvmArgs = {"--enable-preview", "--illegal-access=permit"})
 public class BenchmarkSparkSql {
-  SparkSession spark;
-  Dataset<Row> dataframe;
-  String tableName;
-  int limit;
-  int offset;
-  List<String> wantedColumns;
-  QueryCondition condition;
-  List<String> groupByColumns;
-  List<AggregatedValue> aggregation;
+    SparkSession spark;
+    Dataset<Row> dataframe;
+    String tableName;
+    int limit;
+    int offset;
+    List<String> wantedColumns;
+    QueryCondition condition;
+    QueryCondition conditionCrossing;
+    List<String> groupByColumns;
+    List<AggregatedValue> aggregation;
 
   public static void main(String[] args) throws Exception {
     Options opt = new OptionsBuilder().include(BenchmarkSparkSql.class.getSimpleName()).build();
@@ -34,18 +37,23 @@ public class BenchmarkSparkSql {
 
   @Setup()
   public void setup() {
-    spark =
-        SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+    Dotenv dotenv = Dotenv.load();
+    spark = SparkSession.builder()
+            .appName("Spark Atoti")
+            .config("spark.master", "local")
+            .config("spark.databricks.service.clusterId", dotenv.get("clusterId"))
+            .getOrCreate();
+    spark.sparkContext().addJar("./target/spark-lib-0.0.1-SNAPSHOT.jar");
     spark.sparkContext().setLogLevel("ERROR");
-    dataframe = CsvReader.read("csv/US_accidents_Dec20_updated.csv", spark, ",");
-    tableName = "my_table";
+    dataframe = spark.read().table("us_accidents_15m");
+    tableName = "us_accidents_15m";
     limit = 100000;
     offset = 100000;
     wantedColumns = List.of("ID", "Severity");
     condition = new EqualCondition("Severity", 4);
+    conditionCrossing = new EqualCondition("Crossing", true);
     groupByColumns = List.of("Severity");
     aggregation = List.of(new Count("severity_count"));
-    dataframe.createOrReplaceTempView(tableName);
   }
 
   @Benchmark
@@ -106,8 +114,29 @@ public class BenchmarkSparkSql {
   @Warmup(iterations = 3)
   @Measurement(iterations = 10)
   public void benchmarkSparkSqlAggregation(Blackhole bh) {
-    final Dataset<Row> rows =
-        AggregateQuery.aggregateSql(spark, tableName, groupByColumns, aggregation);
+    final Dataset<Row> rows = AggregateQuery.aggregateSql(spark, tableName, groupByColumns, aggregation);
+    rows.show(); // mandatory to trigger the computation of the dataset
+    bh.consume(rows);
+  }
+
+  @Benchmark
+  @BenchmarkMode(Mode.SingleShotTime)
+  @OutputTimeUnit(TimeUnit.MILLISECONDS)
+  @Warmup(iterations = 3)
+  @Measurement(iterations = 10)
+  public void benchmarkSparkApiAggregationAndCondition(Blackhole bh) {
+    final Dataset<Row> rows = AggregateQuery.aggregate(dataframe, groupByColumns, aggregation, conditionCrossing);
+    rows.show(); // mandatory to trigger the computation of the dataset
+    bh.consume(rows);
+  }
+
+  @Benchmark
+  @BenchmarkMode(Mode.SingleShotTime)
+  @OutputTimeUnit(TimeUnit.MILLISECONDS)
+  @Warmup(iterations = 3)
+  @Measurement(iterations = 10)
+  public void benchmarkSparkSqlAggregationAndCondition(Blackhole bh) {
+    final Dataset<Row> rows = AggregateQuery.aggregateSql(spark, tableName, groupByColumns, aggregation, conditionCrossing);
     rows.show(); // mandatory to trigger the computation of the dataset
     bh.consume(rows);
   }

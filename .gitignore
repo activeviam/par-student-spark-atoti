@@ -28,6 +28,7 @@ hs_err_pid*
 .classpath
 .project
 .settings
+.env
 bin
 /.apt_generated/
 /.apt_generated_tests/

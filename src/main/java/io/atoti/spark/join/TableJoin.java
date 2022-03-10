@@ -3,9 +3,19 @@ package io.atoti.spark.join;
 import io.atoti.spark.Queryable;
 import java.util.Set;
 
-public record TableJoin(
-    Queryable sourceTable, String targetTableName, Set<FieldMapping> fieldMappings)
-    implements Queryable {
+import static java.util.stream.Collectors.toList;
+
+public class TableJoin implements Queryable {
+  Queryable sourceTable;
+  String targetTableName;
+  Set<FieldMapping> fieldMappings;
+
+  public TableJoin(Queryable sourceTable, String targetTableName, Set<FieldMapping> fieldMappings) {
+    this.sourceTable = sourceTable;
+    this.targetTableName = targetTableName;
+    this.fieldMappings = fieldMappings;
+  }
+
   public String toSqlQuery() {
     final String joinConditions =
         String.join(
@@ -13,15 +23,15 @@ public record TableJoin(
             fieldMappings.stream()
                 .map(
                     (fieldMapping) ->
-                        fieldMapping.sourceField()
+                        fieldMapping.getSourceField()
                             + " = "
-                            + fieldMapping.targetField()
+                            + fieldMapping.getTargetField()
                             + " OR ("
-                            + fieldMapping.sourceField()
+                            + fieldMapping.getSourceField()
                             + " IS NULL AND "
-                            + fieldMapping.targetField()
+                            + fieldMapping.getTargetField()
                             + " IS NULL)")
-                .toList());
+                .collect(toList()));
     return sourceTable.toSqlQuery() + "\nJOIN " + targetTableName + " ON " + joinConditions;
   }
 }

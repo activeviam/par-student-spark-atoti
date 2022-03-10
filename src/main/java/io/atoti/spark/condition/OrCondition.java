@@ -1,18 +1,23 @@
 package io.atoti.spark.condition;
 
+import static java.util.stream.Collectors.toList;
+
+import java.util.Arrays;
 import java.util.List;
 import org.apache.spark.sql.Column;
 
-public record OrCondition(List<QueryCondition> conditions) implements QueryCondition {
+public class OrCondition implements QueryCondition {
+  private List<QueryCondition> conditions;
 
-  public OrCondition {
+  public OrCondition(List<QueryCondition> conditions) {
     if (conditions.isEmpty()) {
       throw new IllegalArgumentException("Cannot accept an empty list of conditions");
     }
+    this.conditions = conditions;
   }
 
   public static OrCondition of(final QueryCondition... conditions) {
-    return new OrCondition(List.of(conditions));
+    return new OrCondition(Arrays.asList(conditions));
   }
 
   @Override
@@ -26,6 +31,6 @@ public record OrCondition(List<QueryCondition> conditions) implements QueryCondi
   public String toSqlQuery() {
     return String.join(
         " OR ",
-        this.conditions.stream().map((condition) -> "(" + condition.toSqlQuery() + ")").toList());
+        this.conditions.stream().map((condition) -> "(" + condition.toSqlQuery() + ")").collect(toList()));
   }
 }

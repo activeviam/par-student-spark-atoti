@@ -9,7 +9,7 @@ package io.atoti.spark.condition;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.functions;
 
-public record FalseCondition() implements QueryCondition {
+public class FalseCondition implements QueryCondition {
 
   public static FalseCondition value() {
     return new FalseCondition();

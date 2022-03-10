@@ -19,28 +19,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.spark.sql.Dataset;
+
+import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
 
 class TestSqlQuery {
 
+  static Dotenv dotenv = Dotenv.load();
   static SparkSession spark =
-      SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+      SparkSession.builder()
+              .appName("Spark Atoti")
+              .config("spark.master", "local")
+              .config("spark.databricks.service.clusterId", dotenv.get("clusterId"))
+              .getOrCreate();
 
   public TestSqlQuery() {
     spark.sparkContext().setLogLevel("ERROR");
-
-    registerCsvAsSqlView("csv/basic.csv", "basic");
-    registerCsvAsSqlView("csv/calculate.csv", "calculate");
-    registerCsvAsSqlView("csv/toJoin.csv", "toJoin");
-    registerCsvAsSqlView("csv/twoTypesInSameColumn.csv", "twoTypesInSameColumn");
-  }
-
-  private static void registerCsvAsSqlView(String fileName, String tableName) {
-    final Dataset<Row> dataframe = CsvReader.read(fileName, spark);
-    dataframe.createOrReplaceTempView(tableName);
+    spark.sparkContext().addJar("./target/spark-lib-0.0.1-SNAPSHOT.jar");
   }
 
   @Test

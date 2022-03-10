@@ -6,11 +6,15 @@ import static org.apache.spark.sql.functions.sum;
 import java.util.Objects;
 import org.apache.spark.sql.Column;
 
-public record Sum(String name, String column) implements AggregatedValue {
+public class Sum implements AggregatedValue {
+  String name;
+  String column;
 
-  public Sum {
+  public Sum(String name, String column) {
     Objects.requireNonNull(name, "No name provided");
     Objects.requireNonNull(column, "No column provided");
+    this.name = name;
+    this.column = column;
   }
 
   public Column toAggregateColumn() {

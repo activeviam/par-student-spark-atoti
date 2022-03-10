@@ -18,6 +18,8 @@ For windows users, use `mvnw.cmd` instead of `./mvnw`.
 
 To run tests, use `./mvnw test`.
 
+Don't forget to create the .env based on the .env.example if you use a databricks cluster !
+
 # Formatting
 
 Not to worry too much on different coding styles, this code base is formatted
@@ -25,3 +27,11 @@ using [coveo fmt-maven-plugin](https://github.com/coveooss/fmt-maven-plugin) to 
 guide.
 
 To use it, run `./mvnw com.coveo:fmt-maven-plugin:format`.
+
+# Build Jar for DataBricks
+
+You have to build two jars if you want to launch jobs on databricks. To do so, run this command :
+```shell
+./mvnw -P jar-creation clean package clean
+```
+Then, you can build the project and run the tests/benchmarks (you have to be on the databricks profile)

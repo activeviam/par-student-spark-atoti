@@ -3,7 +3,12 @@ package io.atoti.spark.condition;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.functions;
 
-public record NullCondition(String fieldName) implements QueryCondition {
+public class NullCondition implements QueryCondition {
+  String fieldName;
+
+  public NullCondition(String fieldName) {
+    this.fieldName = fieldName;
+  }
 
   @Override
   public Column getCondition() {

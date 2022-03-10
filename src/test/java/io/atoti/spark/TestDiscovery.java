@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
+
+import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -12,12 +14,18 @@ import org.apache.spark.sql.types.DataTypes;
 import org.junit.jupiter.api.Test;
 
 public class TestDiscovery {
-  SparkSession spark =
-      SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+
+  static Dotenv dotenv = Dotenv.load();
+  static SparkSession spark =
+      SparkSession.builder()
+              .appName("Spark Atoti")
+              .config("spark.master", "local")
+              .config("spark.databricks.service.clusterId", dotenv.get("clusterId"))
+              .getOrCreate();
 
   @Test
   void testDiscoveryBasis() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
     assertThat(dataframe).isNotNull();
@@ -35,8 +43,7 @@ public class TestDiscovery {
 
   @Test
   void testDiscoveryTwoTypesInSameColumn() {
-
-    final Dataset<Row> dataframe = CsvReader.read("csv/twoTypesInSameColumn.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("twotypesinsamecolumn");
     final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
     assertThat(dataframe).isNotNull();
@@ -54,9 +61,8 @@ public class TestDiscovery {
 
   @Test
   void testDiscoveryJoin() {
-
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
-    final Dataset<Row> dataframeToJoin = CsvReader.read("csv/toJoin.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
+    final Dataset<Row> dataframeToJoin = spark.read().table("tojoin");
 
     final Dataset<Row> dataframeJoin =
         dataframe.join(
@@ -85,8 +91,7 @@ public class TestDiscovery {
 
   @Test
   void testDiscoveryCalculate() {
-
-    Dataset<Row> dataframe = CsvReader.read("csv/calculate.csv", spark);
+    Dataset<Row> dataframe = spark.read().table("calculate");
     dataframe =
         dataframe
             .withColumn("val1_minus_val2", dataframe.col("val1").minus(dataframe.col("val2")))

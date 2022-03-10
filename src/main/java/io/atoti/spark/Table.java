@@ -1,6 +1,11 @@
 package io.atoti.spark;
 
-public record Table(String name) implements Queryable {
+public class Table implements Queryable {
+  String name;
+
+  public Table(String name) {
+    this.name = name;
+  }
 
   @Override
   public String toSqlQuery() {
