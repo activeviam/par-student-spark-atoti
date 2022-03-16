@@ -38,19 +38,18 @@ public class Utils {
 
   public static long quantile(ArrayList<Long> arr, float percent) {
     var pq = constructMaxHeap(arr);
-    int index = (int) Math.ceil(arr.size() * percent / 100);
+    int index = (int) Math.floor(arr.size() * (100 - percent) / 100);
 
     for (int i = arr.size() - 1; i > index; i--) {
       pq.poll();
     }
 
-    var k = pq.poll();
-    return (k.value() + pq.peek().value()) / 2;
+    return pq.poll().value();
   }
 
-  public static long quantileIndex(ArrayList<Long> arr, float percent) {
+  public static int quantileIndex(ArrayList<Long> arr, float percent) {
     var pq = constructMaxHeap(arr);
-    int index = (int) Math.ceil(arr.size() * percent / 100);
+    int index = (int) Math.floor(arr.size() * (100 - percent) / 100);
 
     for (int i = arr.size() - 1; i > index; i--) {
       pq.poll();

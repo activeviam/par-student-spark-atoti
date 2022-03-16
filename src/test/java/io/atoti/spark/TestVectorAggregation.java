@@ -34,6 +34,7 @@ public class TestVectorAggregation {
     return new ArrayList<Long>(JavaConverters.asJavaCollectionConverter(arr).asJavaCollection());
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   void quantile() {
     final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
@@ -52,19 +53,19 @@ public class TestVectorAggregation {
     final var rowsById =
         rows.stream().collect(Collectors.toUnmodifiableMap(row -> (row.getAs("id")), row -> (row)));
 
-    assertThat((long) rowsById.get(1).getAs("quantile")).isEqualTo(7);
-    assertThat((long) rowsById.get(2).getAs("quantile")).isEqualTo(3);
+    assertThat((long) rowsById.get(1).getAs("quantile")).isEqualTo(7L);
+    assertThat((long) rowsById.get(2).getAs("quantile")).isEqualTo(3L);
     for (int i = 0; i < 3; i++) {
       assertThat(
               convertScalaArrayToArray(
                       (ArraySeq<Long>) rowsById.get(1).getAs("price_simulations_sum"))
                   .get(i))
-          .isEqualTo(List.of(3, 7, 5).get(i));
+          .isEqualTo(List.of(3L, 7L, 5L).get(i));
       assertThat(
               convertScalaArrayToArray(
                       (ArraySeq<Long>) rowsById.get(2).getAs("price_simulations_sum"))
                   .get(i))
-          .isEqualTo(List.of(1, 3, 2).get(i));
+          .isEqualTo(List.of(1L, 3L, 2L).get(i));
     }
   }
 
@@ -178,11 +179,11 @@ public class TestVectorAggregation {
         rows.stream()
             .collect(Collectors.toUnmodifiableMap(row -> (row.getAs("simulation")), row -> (row)));
 
-    assertThat((long) rowsById.get(1).getAs("i95%")).isEqualTo(2);
+    assertThat((int) rowsById.get(1).getAs("i95%")).isEqualTo(7);
 
-    assertThat((long) rowsById.get(2).getAs("i95%")).isEqualTo(0);
+    assertThat((int) rowsById.get(2).getAs("i95%")).isEqualTo(7);
 
-    assertThat((long) rowsById.get(3).getAs("i95%")).isEqualTo(2);
+    assertThat((int) rowsById.get(3).getAs("i95%")).isEqualTo(7);
   }
 
   //
@@ -202,21 +203,19 @@ public class TestVectorAggregation {
                 List.of(
                     new Quantile("v95%", revenues, 95f), new QuantileIndex("i95%", revenues, 95f)))
             .collectAsList();
-
-    final var compareByV95 = Comparator.<Row>comparingInt(row -> row.getInt(1));
+    final var compareByV95 = Comparator.<Row>comparingLong(row -> (Long) (row.getAs("v95%")));
     final int bestSimulation =
         rows.stream()
             .sorted(compareByV95.reversed())
-            .mapToInt(row -> row.getInt(0))
+            .mapToInt(row -> (int) (row.getAs("i95%")))
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("No data to look at"));
     final int worstSimulation =
         rows.stream()
             .sorted(compareByV95)
-            .mapToInt(row -> row.getInt(0))
+            .mapToInt(row -> (int) (row.getAs("i95%")))
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("No data to look at"));
-    System.out.println(bestSimulation + " " + worstSimulation);
     // Study the chosen simulations on the prices per category
     var result =
         AggregateQuery.aggregate(
@@ -235,13 +234,13 @@ public class TestVectorAggregation {
         result.stream()
             .collect(Collectors.toUnmodifiableMap(row -> (row.getAs("simulation")), row -> (row)));
 
-    assertThat((long) rowsById.get(1).getAs("revenue-at-best")).isEqualTo(840);
-    assertThat((long) rowsById.get(1).getAs("revenue-at-worst")).isEqualTo(30);
+    assertThat((long) rowsById.get(1).getAs("revenue-at-best")).isEqualTo(840L);
+    assertThat((long) rowsById.get(1).getAs("revenue-at-worst")).isEqualTo(840L);
 
-    assertThat((long) rowsById.get(2).getAs("revenue-at-best")).isEqualTo(560);
-    assertThat((long) rowsById.get(2).getAs("revenue-at-worst")).isEqualTo(40);
+    assertThat((long) rowsById.get(2).getAs("revenue-at-best")).isEqualTo(560L);
+    assertThat((long) rowsById.get(2).getAs("revenue-at-worst")).isEqualTo(560L);
 
-    assertThat((long) rowsById.get(3).getAs("revenue-at-best")).isEqualTo(690);
-    assertThat((long) rowsById.get(3).getAs("revenue-at-worst")).isEqualTo(30);
+    assertThat((long) rowsById.get(3).getAs("revenue-at-best")).isEqualTo(690L);
+    assertThat((long) rowsById.get(3).getAs("revenue-at-worst")).isEqualTo(690L);
   }
 }

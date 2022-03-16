@@ -16,9 +16,9 @@ public final class QuantileIndex extends Operation {
     return udf(
         (ArraySeq<Long> arr) -> {
           var javaArr = Utils.convertScalaArrayToArray(arr);
-          return Utils.quantileIndex(javaArr, percent);
+          return Utils.quantileIndex(javaArr, percent) + 1;
         },
-        DataTypes.LongType);
+        DataTypes.IntegerType);
   }
 
   public QuantileIndex(String name, String arrayColumn, float percent) {
