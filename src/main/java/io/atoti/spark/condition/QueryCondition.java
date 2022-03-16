@@ -1,8 +1,7 @@
 package io.atoti.spark.condition;
 
 import java.io.Serializable;
-import org.apache.spark.api.java.function.FilterFunction;
-import org.apache.spark.sql.Row;
+import org.apache.spark.sql.Column;
 
 public sealed interface QueryCondition extends Serializable
     permits AndCondition,
@@ -12,7 +11,7 @@ public sealed interface QueryCondition extends Serializable
         NullCondition,
         TrueCondition,
         FalseCondition {
-  FilterFunction<Row> getCondition();
+  Column getCondition();
 
   String toSqlQuery();
 }
