@@ -3,12 +3,16 @@ package io.atoti.spark.operation;
 import static org.apache.spark.sql.functions.col;
 
 import io.atoti.spark.aggregation.AggregatedValue;
+
+import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import org.apache.spark.sql.Column;
 
-public abstract sealed class Operation permits Multiply, Quantile, QuantileIndex, VectorAt {
+public abstract class Operation implements Serializable {
 
+  private static final long serialVersionUID = 8932076027291294986L;
   protected String name;
   protected Column column;
   protected List<AggregatedValue> neededAggregations;
@@ -16,8 +20,8 @@ public abstract sealed class Operation permits Multiply, Quantile, QuantileIndex
 
   public Operation(String name) {
     this.name = name;
-    this.neededAggregations = List.of();
-    this.neededOperations = List.of();
+    this.neededAggregations = Arrays.asList();
+    this.neededOperations = Arrays.asList();
   }
 
   public Column toAggregateColumn() {

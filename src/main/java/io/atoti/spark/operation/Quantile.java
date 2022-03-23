@@ -5,17 +5,20 @@ import static org.apache.spark.sql.functions.udf;
 
 import io.atoti.spark.Utils;
 import io.atoti.spark.aggregation.AggregatedValue;
-import java.util.List;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import org.apache.spark.sql.expressions.UserDefinedFunction;
 import org.apache.spark.sql.types.DataTypes;
-import scala.collection.immutable.ArraySeq;
+import scala.collection.JavaConverters;
+import scala.collection.Seq;
 
 public final class Quantile extends Operation {
 
   static UserDefinedFunction quantileUdf(float percent) {
     return udf(
-        (ArraySeq<Long> arr) -> {
-          var javaArr = Utils.convertScalaArrayToArray(arr);
+        (Seq<Long> arr) -> {
+          ArrayList<Long> javaArr = new ArrayList<Long>(JavaConverters.asJavaCollectionConverter(arr).asJavaCollection());
           return Utils.quantile(javaArr, percent);
         },
         DataTypes.LongType);
@@ -29,12 +32,12 @@ public final class Quantile extends Operation {
   public Quantile(String name, AggregatedValue arrayColumn, float percent) {
     super(name);
     this.column = quantileUdf(percent).apply(arrayColumn.toColumn()).alias(name);
-    this.neededAggregations = List.of(arrayColumn);
+    this.neededAggregations = Arrays.asList(arrayColumn);
   }
 
   public Quantile(String name, Operation arrayColumn, float percent) {
     super(name);
     this.column = quantileUdf(percent).apply(arrayColumn.toColumn()).alias(name);
-    this.neededOperations = List.of(arrayColumn);
+    this.neededOperations = Arrays.asList(arrayColumn);
   }
 }

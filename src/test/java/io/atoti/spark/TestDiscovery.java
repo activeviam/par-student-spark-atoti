@@ -115,7 +115,7 @@ public class TestDiscovery {
 
   @Test
   void testDiscoveryArray() {
-    Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
+    Dataset<Row> dataframe = spark.read().table("array");
     final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
 
     assertThat(dataframe).isNotNull();

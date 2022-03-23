@@ -6,6 +6,7 @@ import io.atoti.spark.condition.TrueCondition;
 import io.atoti.spark.operation.Operation;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
@@ -31,7 +32,7 @@ public class AggregateQuery {
       List<String> groupByColumns,
       List<AggregatedValue> aggregations,
       QueryCondition condition) {
-    return aggregate(dataframe, groupByColumns, aggregations, List.of(), condition);
+    return aggregate(dataframe, groupByColumns, aggregations, Arrays.asList(), condition);
   }
 
   public static Dataset<Row> aggregate(
@@ -81,7 +82,7 @@ public class AggregateQuery {
                 operations.stream().flatMap(Operation::getNeededAggregations),
                 aggregations.stream())
             .distinct()
-            .toList();
+            .collect(Collectors.toList());
 
     // Aggregations
     if (!neededAggregations.isEmpty()) {
@@ -100,7 +101,7 @@ public class AggregateQuery {
     // Operations
     if (!operations.isEmpty()) {
       for (Operation op :
-          operations.stream().flatMap(Operation::getAllOperations).distinct().toList()) {
+          operations.stream().flatMap(Operation::getAllOperations).distinct().collect(Collectors.toList())) {
         dataframe = dataframe.withColumn(op.getName(), op.toAggregateColumn());
       }
     }

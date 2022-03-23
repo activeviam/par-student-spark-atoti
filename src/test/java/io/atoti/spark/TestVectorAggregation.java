@@ -18,17 +18,30 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
 import scala.collection.JavaConverters;
-import scala.collection.mutable.ArraySeq;
+import scala.collection.compat.immutable.ArraySeq;
 
 public class TestVectorAggregation {
 
-  SparkSession spark =
-      SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+  static Dotenv dotenv = Dotenv.load();
+  static SparkSession spark =
+          SparkSession.builder()
+                  .appName("Spark Atoti")
+                  .config("spark.master", "local")
+                  .config("spark.databricks.service.clusterId", dotenv.get("clusterId"))
+                  .getOrCreate();
+
+  public TestVectorAggregation() {
+    spark.sparkContext().setLogLevel("ERROR");
+    spark.sparkContext().addJar("./target/spark-lib-0.0.1-SNAPSHOT.jar");
+  }
 
   private static ArrayList<Long> convertScalaArrayToArray(ArraySeq<Long> arr) {
     return new ArrayList<Long>(JavaConverters.asJavaCollectionConverter(arr).asJavaCollection());
@@ -37,7 +50,8 @@ public class TestVectorAggregation {
   @SuppressWarnings("unchecked")
   @Test
   void quantile() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
+
+    final Dataset<Row> dataframe = spark.read().table("array");
     var price_simulations =
         new SumArray(
             "price_simulations_sum", "price_simulations", spark.implicits().newLongArrayEncoder());
@@ -72,7 +86,7 @@ public class TestVectorAggregation {
   //
   @Test
   void vectorAt() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("array");
     var price_simulations =
         new SumArray(
             "price_simulations_bis", "price_simulations", spark.implicits().newLongArrayEncoder());
@@ -95,7 +109,7 @@ public class TestVectorAggregation {
   @SuppressWarnings("unchecked")
   @Test
   void simpleAggregation() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("array");
     var sumVector =
         new SumArray("sum(vector)", "price_simulations", spark.implicits().newLongArrayEncoder());
     var rows =
@@ -123,7 +137,7 @@ public class TestVectorAggregation {
   @SuppressWarnings("unchecked")
   @Test
   void vectorScaling() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("array");
     final var f_vector =
         new Multiply(
             "f * vector",
@@ -153,7 +167,7 @@ public class TestVectorAggregation {
   //
   @Test
   void vectorQuantile() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/simulations.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("simulations");
     var rows =
         AggregateQuery.aggregate(
                 dataframe,
@@ -189,7 +203,7 @@ public class TestVectorAggregation {
   //
   @Test
   void simulationExplorationAtQuantile() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/simulations.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("simulations");
     final var revenues =
         new Multiply(
             "f * vector",

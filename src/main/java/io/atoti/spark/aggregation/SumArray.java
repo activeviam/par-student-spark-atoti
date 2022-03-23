@@ -1,5 +1,6 @@
 package io.atoti.spark.aggregation;
 
+import static io.atoti.spark.Utils.convertScalaArrayToArray;
 import static org.apache.spark.sql.functions.col;
 
 import java.io.Serializable;
@@ -10,8 +11,7 @@ import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Encoder;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.expressions.Aggregator;
-import scala.collection.mutable.ArraySeq;
-import scala.jdk.CollectionConverters;
+import scala.collection.compat.immutable.ArraySeq;
 
 public final class SumArray implements AggregatedValue, Serializable {
   private static final long serialVersionUID = 8932076027241294986L;
@@ -38,7 +38,7 @@ public final class SumArray implements AggregatedValue, Serializable {
     Objects.requireNonNull(column, "No column provided");
     this.name = name;
     this.column = column;
-    udaf =
+    this.udaf =
         new Aggregator<Row, long[], long[]>() {
           private static final long serialVersionUID = -6760989932234595260L;
 
@@ -54,7 +54,7 @@ public final class SumArray implements AggregatedValue, Serializable {
 
           @Override
           public long[] merge(long[] b1, long[] b2) {
-            return sum(b1, b2);
+            return b1;
           }
 
           @Override
@@ -67,13 +67,13 @@ public final class SumArray implements AggregatedValue, Serializable {
           public long[] reduce(long[] b, Row a) {
             ArraySeq<Long> arraySeq;
             try {
-              arraySeq = (ArraySeq<Long>) a.getAs(column);
+              arraySeq = a.getAs(column);
             } catch (ClassCastException e) {
               throw new UnsupportedOperationException("Column did not contains only arrays");
             }
-            List<Long> list = CollectionConverters.SeqHasAsJava(arraySeq).asJava();
+            List<Long> list = convertScalaArrayToArray(arraySeq);
             long[] array = list.stream().mapToLong(i -> i).toArray();
-            return sum(array, b);
+            return b;
           }
 
           @Override

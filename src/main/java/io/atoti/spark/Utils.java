@@ -7,10 +7,18 @@ import java.util.PriorityQueue;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import scala.collection.JavaConverters;
-import scala.collection.immutable.ArraySeq;
+import scala.collection.compat.immutable.ArraySeq;
 import scala.collection.immutable.Seq;
 
-record ArrayElement(int index, long value) {}
+class ArrayElement {
+  int index;
+  long value;
+
+  public ArrayElement(int index, long value) {
+    this.index = index;
+    this.value = value;
+  }
+}
 
 public class Utils {
   public static ArrayList<Long> convertScalaArrayToArray(ArraySeq<Long> arr) {
@@ -18,17 +26,17 @@ public class Utils {
   }
 
   public static Seq<Long> convertToArrayListToScalaArraySeq(List<Long> arr) {
-    return JavaConverters.asScala(arr).iterator().toSeq();
+    return (Seq<Long>) JavaConverters.asScalaBuffer(arr).iterator().toSeq();
   }
 
   public static long t(ArrayElement a, ArrayElement b) {
-    return b.value() - a.value();
+    return b.value - a.value;
   }
 
   public static PriorityQueue<ArrayElement> constructMaxHeap(ArrayList<Long> arr) {
-    var pq =
+    PriorityQueue<ArrayElement> pq =
         new PriorityQueue<ArrayElement>(
-            (ArrayElement a, ArrayElement b) -> Long.compare(a.value(), b.value()));
+            (ArrayElement a, ArrayElement b) -> Long.compare(a.value, b.value));
     pq.addAll(
         IntStream.range(0, arr.size())
             .mapToObj((int k) -> new ArrayElement(k, arr.get(k)))
@@ -37,25 +45,25 @@ public class Utils {
   }
 
   public static long quantile(ArrayList<Long> arr, float percent) {
-    var pq = constructMaxHeap(arr);
+    PriorityQueue<ArrayElement> pq = constructMaxHeap(arr);
     int index = (int) Math.floor(arr.size() * (100 - percent) / 100);
 
     for (int i = arr.size() - 1; i > index; i--) {
       pq.poll();
     }
 
-    return pq.poll().value();
+    return pq.poll().value;
   }
 
   public static int quantileIndex(ArrayList<Long> arr, float percent) {
-    var pq = constructMaxHeap(arr);
+    PriorityQueue<ArrayElement> pq = constructMaxHeap(arr);
     int index = (int) Math.floor(arr.size() * (100 - percent) / 100);
 
     for (int i = arr.size() - 1; i > index; i--) {
       pq.poll();
     }
 
-    return pq.poll().index();
+    return pq.poll().index;
   }
 
   public static int findKthLargestElement(ArrayList<Integer> arr, int k) {
@@ -63,7 +71,7 @@ public class Utils {
       throw new ArrayIndexOutOfBoundsException();
     }
 
-    var pq = new PriorityQueue<Integer>(Comparator.reverseOrder());
+    PriorityQueue<Integer> pq = new PriorityQueue<Integer>(Comparator.reverseOrder());
 
     pq.addAll(arr);
 
