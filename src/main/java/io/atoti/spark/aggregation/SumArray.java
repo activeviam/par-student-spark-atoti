@@ -1,24 +1,22 @@
 package io.atoti.spark.aggregation;
 
 import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.functions.udaf;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Encoder;
-import org.apache.spark.sql.Row;
 import org.apache.spark.sql.expressions.Aggregator;
-import scala.collection.mutable.ArraySeq;
-import scala.jdk.CollectionConverters;
+import org.apache.spark.sql.expressions.UserDefinedFunction;
 
 public final class SumArray implements AggregatedValue, Serializable {
   private static final long serialVersionUID = 8932076027241294986L;
 
   public String name;
   public String column;
-  private Aggregator<Row, long[], long[]> udaf;
+  private UserDefinedFunction sumUdaf;
 
   private static long[] sum(long[] a, long[] b) {
     if (a.length == 0) {
@@ -38,8 +36,8 @@ public final class SumArray implements AggregatedValue, Serializable {
     Objects.requireNonNull(column, "No column provided");
     this.name = name;
     this.column = column;
-    udaf =
-        new Aggregator<Row, long[], long[]>() {
+    this.sumUdaf = udaf(
+        new Aggregator<long[], long[], long[]>() {
           private static final long serialVersionUID = -6760989932234595260L;
 
           @Override
@@ -62,29 +60,20 @@ public final class SumArray implements AggregatedValue, Serializable {
             return encoder;
           }
 
-          @SuppressWarnings("unchecked")
           @Override
-          public long[] reduce(long[] b, Row a) {
-            ArraySeq<Long> arraySeq;
-            try {
-              arraySeq = (ArraySeq<Long>) a.getAs(column);
-            } catch (ClassCastException e) {
-              throw new UnsupportedOperationException("Column did not contains only arrays");
-            }
-            List<Long> list = CollectionConverters.SeqHasAsJava(arraySeq).asJava();
-            long[] array = list.stream().mapToLong(i -> i).toArray();
-            return sum(array, b);
+          public long[] reduce(long[] b, long[] a) {
+        	  return sum(a, b);
           }
 
           @Override
           public long[] zero() {
             return new long[0];
           }
-        };
+        }, encoder);
   }
 
   public Column toAggregateColumn() {
-    return udaf.toColumn().as(this.name);
+    return sumUdaf.apply(col(this.column)).as(this.name);
   }
 
   public Column toColumn() {
