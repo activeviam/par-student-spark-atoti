@@ -31,11 +31,11 @@ public class TestVectorAggregation {
 
   static Dotenv dotenv = Dotenv.load();
   static SparkSession spark =
-          SparkSession.builder()
-                  .appName("Spark Atoti")
-                  .config("spark.master", "local")
-                  .config("spark.databricks.service.clusterId", dotenv.get("clusterId", "local-id"))
-                  .getOrCreate();
+      SparkSession.builder()
+          .appName("Spark Atoti")
+          .config("spark.master", "local")
+          .config("spark.databricks.service.clusterId", dotenv.get("clusterId", "local-id"))
+          .getOrCreate();
 
   public TestVectorAggregation() {
     spark.sparkContext().setLogLevel("ERROR");
@@ -70,14 +70,14 @@ public class TestVectorAggregation {
     assertThat((long) rowsById.get(2).getAs("quantile")).isEqualTo(3L);
     for (int i = 0; i < 3; i++) {
       assertThat(
-              convertScalaArrayToArray(
-                      (ArraySeq<Long>) rowsById.get(1).getAs("price_simulations_sum"))
-                  .get(i))
+          convertScalaArrayToArray(
+              (ArraySeq<Long>) rowsById.get(1).getAs("price_simulations_sum"))
+              .get(i))
           .isEqualTo(List.of(3L, 7L, 5L).get(i));
       assertThat(
-              convertScalaArrayToArray(
-                      (ArraySeq<Long>) rowsById.get(2).getAs("price_simulations_sum"))
-                  .get(i))
+          convertScalaArrayToArray(
+              (ArraySeq<Long>) rowsById.get(2).getAs("price_simulations_sum"))
+              .get(i))
           .isEqualTo(List.of(1L, 3L, 2L).get(i));
     }
   }
@@ -122,12 +122,12 @@ public class TestVectorAggregation {
 
     for (int i = 0; i < 3; i++) {
       assertThat(
-              convertScalaArrayToArray((ArraySeq<Long>) rowsById.get(1).getAs("sum(vector)"))
-                  .get(i))
+          convertScalaArrayToArray((ArraySeq<Long>) rowsById.get(1).getAs("sum(vector)"))
+              .get(i))
           .isEqualTo(List.of(3L, 7L, 5L).get(i));
       assertThat(
-              convertScalaArrayToArray((ArraySeq<Long>) rowsById.get(2).getAs("sum(vector)"))
-                  .get(i))
+          convertScalaArrayToArray((ArraySeq<Long>) rowsById.get(2).getAs("sum(vector)"))
+              .get(i))
           .isEqualTo(List.of(1L, 3L, 2L).get(i));
     }
   }
@@ -155,10 +155,10 @@ public class TestVectorAggregation {
 
     for (int i = 0; i < 3; i++) {
       assertThat(
-              convertScalaArrayToArray((ArraySeq<Long>) rowsById.get(1).getAs("f * vector")).get(i))
+          convertScalaArrayToArray((ArraySeq<Long>) rowsById.get(1).getAs("f * vector")).get(i))
           .isEqualTo(List.of(15L, 35L, 25L).get(i));
       assertThat(
-              convertScalaArrayToArray((ArraySeq<Long>) rowsById.get(2).getAs("f * vector")).get(i))
+          convertScalaArrayToArray((ArraySeq<Long>) rowsById.get(2).getAs("f * vector")).get(i))
           .isEqualTo(List.of(2L, 6L, 4L).get(i));
     }
   }
@@ -263,12 +263,38 @@ public class TestVectorAggregation {
     var price_simulations =
         new SumArrayLength(
             "price_simulations_sum", "price_simulations");
+    {
+      var totalRows =
+          AggregateQuery.aggregate(
+                  dataframe, List.of(), List.of(price_simulations), List.of())
+              .collectAsList();
+      System.out.println(totalRows);
+      assertThat(totalRows).hasSize(1)
+          .extracting(row -> row.getLong(0))
+          .containsExactlyInAnyOrder(6L);
+    }
+    {
+      var rowsById =
+          AggregateQuery.aggregate(
+                  dataframe, List.of("id"), List.of(price_simulations), List.of())
+              .collectAsList();
+      System.out.println(rowsById);
+      assertThat(rowsById).hasSize(2)
+          .extracting(row -> row.getLong(1))
+          .containsExactlyInAnyOrder(3L, 3L);
+    }
+  }
+
+  @Test
+  void sumVector() {
+    final Dataset<Row> dataframe = spark.read().table("array");
+    var price_simulations =
+        new SumArray(
+            "price_simulations_bis", "price_simulations", null);
     var rows =
-        AggregateQuery.aggregate(
-                dataframe, List.of("id"), List.of(price_simulations), List.of())
+        AggregateQuery.aggregate(dataframe, List.of("id"), List.of(price_simulations), List.of())
             .collectAsList();
 
-    // result must have 2 values
     System.out.println(rows);
   }
 }
