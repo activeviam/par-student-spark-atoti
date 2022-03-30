@@ -10,18 +10,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.atoti.spark.aggregation.Sum;
 import io.atoti.spark.aggregation.SumArray;
+import io.atoti.spark.aggregation.SumArrayLength;
 import io.atoti.spark.operation.Multiply;
 import io.atoti.spark.operation.Quantile;
 import io.atoti.spark.operation.QuantileIndex;
 import io.atoti.spark.operation.VectorAt;
+import io.github.cdimascio.dotenv.Dotenv;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
@@ -35,7 +34,7 @@ public class TestVectorAggregation {
           SparkSession.builder()
                   .appName("Spark Atoti")
                   .config("spark.master", "local")
-                  .config("spark.databricks.service.clusterId", dotenv.get("clusterId"))
+                  .config("spark.databricks.service.clusterId", dotenv.get("clusterId", "local-id"))
                   .getOrCreate();
 
   public TestVectorAggregation() {
@@ -256,5 +255,20 @@ public class TestVectorAggregation {
 
     assertThat((long) rowsById.get(3).getAs("revenue-at-best")).isEqualTo(690L);
     assertThat((long) rowsById.get(3).getAs("revenue-at-worst")).isEqualTo(690L);
+  }
+
+  @Test
+  void testSumArrayLength() {
+    final Dataset<Row> dataframe = spark.read().table("array");
+    var price_simulations =
+        new SumArrayLength(
+            "price_simulations_sum", "price_simulations");
+    var rows =
+        AggregateQuery.aggregate(
+                dataframe, List.of("id"), List.of(price_simulations), List.of())
+            .collectAsList();
+
+    // result must have 2 values
+    System.out.println(rows);
   }
 }
