@@ -10,6 +10,7 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.expressions.Aggregator;
 import scala.collection.compat.immutable.ArraySeq;
+import scala.collection.mutable.WrappedArray;
 
 public final class SumArrayLength implements AggregatedValue, Serializable {
   private static final long serialVersionUID = 20220330_0933L;
@@ -49,11 +50,11 @@ public final class SumArrayLength implements AggregatedValue, Serializable {
 
           @Override
           public Long reduce(final Long result, final Row row) {
-            final ArraySeq<Long> arraySeq;
+            final WrappedArray<Long> arraySeq;
             try {
               arraySeq = row.getAs(column);
             } catch (final ClassCastException e) {
-              throw new UnsupportedOperationException("Column did not contains only arrays");
+              throw new UnsupportedOperationException("Column did not contains only arrays", e);
             }
             return result + arraySeq.length();
           }
