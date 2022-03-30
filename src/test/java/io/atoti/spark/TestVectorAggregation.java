@@ -213,7 +213,7 @@ public class TestVectorAggregation {
 
     final var rowsById =
         rows.stream()
-            .collect(Collectors.toUnmodifiableMap(row -> (row.getAs("simulation")), row -> (row)));
+            .collect(Collectors.toUnmodifiableMap(row -> (row.<Number>getAs("simulation").intValue()), row -> (row)));
 
     assertThat((int) rowsById.get(1).getAs("i95%")).isEqualTo(7);
 
