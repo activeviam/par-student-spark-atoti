@@ -66,20 +66,20 @@ public class TestVectorAggregation {
 
     final var rowsById =
         rows.stream().collect(Collectors.toUnmodifiableMap(
-            row -> row.<Number>getAs("id").longValue(),
+            row -> row.<Number>getAs("id").intValue(),
             row -> (row)));
 
-    assertThat((long) rowsById.get(1L).getAs("quantile")).isEqualTo(7L);
-    assertThat((long) rowsById.get(2L).getAs("quantile")).isEqualTo(3L);
+    assertThat((long) rowsById.get(1).getAs("quantile")).isEqualTo(7L);
+    assertThat((long) rowsById.get(2).getAs("quantile")).isEqualTo(3L);
     for (int i = 0; i < 3; i++) {
       assertThat(
           convertScalaArrayToArray(
-              rowsById.get(1L).<IndexedSeq<Long>>getAs("price_simulations_sum"))
+              rowsById.get(1).<IndexedSeq<Long>>getAs("price_simulations_sum"))
                   .get(i))
           .isEqualTo(List.of(3L, 7L, 5L).get(i));
       assertThat(
           convertScalaArrayToArray(
-              rowsById.get(2L).<IndexedSeq<Long>>getAs("price_simulations_sum"))
+              rowsById.get(2).<IndexedSeq<Long>>getAs("price_simulations_sum"))
               .get(i))
           .isEqualTo(List.of(1L, 3L, 2L).get(i));
     }
