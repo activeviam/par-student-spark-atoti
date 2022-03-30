@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import scala.collection.IndexedSeq;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
-import scala.collection.compat.immutable.ArraySeq;
 
 public class TestVectorAggregation {
 
@@ -86,6 +85,25 @@ public class TestVectorAggregation {
     }
   }
 
+  @SuppressWarnings("unchecked")
+  @Test
+  void quantileIndex() {
+
+    final Dataset<Row> dataframe = spark.read().table("array");
+    var price_simulations =
+        new SumArray(
+            "price_simulations_sum", "price_simulations");
+    var quantile = new QuantileIndex("quantile", price_simulations, 95f);
+    var rows =
+        AggregateQuery.aggregate(
+                dataframe, List.of("id"), List.of(price_simulations), List.of(quantile))
+            .collectAsList();
+
+    // result must have 2 values
+    assertThat(rows).hasSize(2);
+    System.out.println(rows);
+  }
+
   //
   @Test
   void vectorAt() {
@@ -102,7 +120,7 @@ public class TestVectorAggregation {
     assertThat(rows).hasSize(2);
 
     final var rowsById =
-        rows.stream().collect(Collectors.toUnmodifiableMap(row -> (row.getAs("id")), row -> (row)));
+        rows.stream().collect(Collectors.toUnmodifiableMap(row -> row.<Number>getAs("id").intValue(), row -> (row)));
 
     assertThat((long) rowsById.get(1).getAs("vector-at")).isEqualTo(3);
 
@@ -122,15 +140,16 @@ public class TestVectorAggregation {
     assertThat(rows).hasSize(2);
 
     final var rowsById =
-        rows.stream().collect(Collectors.toUnmodifiableMap(row -> (row.getAs("id")), row -> (row)));
+        rows.stream().collect(Collectors.toUnmodifiableMap(
+            row -> row.<Number>getAs("id").intValue(), row -> (row)));
 
     for (int i = 0; i < 3; i++) {
       assertThat(
-          convertScalaArrayToArray((ArraySeq<Long>) rowsById.get(1).getAs("sum(vector)"))
+          convertScalaArrayToArray(rowsById.get(1).<Seq<Long>>getAs("sum(vector)"))
               .get(i))
           .isEqualTo(List.of(3L, 7L, 5L).get(i));
       assertThat(
-          convertScalaArrayToArray((ArraySeq<Long>) rowsById.get(2).getAs("sum(vector)"))
+          convertScalaArrayToArray((Seq<Long>) rowsById.get(2).getAs("sum(vector)"))
               .get(i))
           .isEqualTo(List.of(1L, 3L, 2L).get(i));
     }
@@ -155,14 +174,14 @@ public class TestVectorAggregation {
     assertThat(rows).hasSize(2);
 
     final var rowsById =
-        rows.stream().collect(Collectors.toUnmodifiableMap(row -> (row.getAs("id")), row -> (row)));
+        rows.stream().collect(Collectors.toUnmodifiableMap(row -> (row.<Number>getAs("id").intValue()), row -> (row)));
 
     for (int i = 0; i < 3; i++) {
       assertThat(
-          convertScalaArrayToArray((ArraySeq<Long>) rowsById.get(1).getAs("f * vector")).get(i))
+          convertScalaArrayToArray((Seq<Long>) rowsById.get(1).getAs("f * vector")).get(i))
           .isEqualTo(List.of(15L, 35L, 25L).get(i));
       assertThat(
-          convertScalaArrayToArray((ArraySeq<Long>) rowsById.get(2).getAs("f * vector")).get(i))
+          convertScalaArrayToArray((Seq<Long>) rowsById.get(2).getAs("f * vector")).get(i))
           .isEqualTo(List.of(2L, 6L, 4L).get(i));
     }
   }
@@ -249,7 +268,7 @@ public class TestVectorAggregation {
 
     final var rowsById =
         result.stream()
-            .collect(Collectors.toUnmodifiableMap(row -> (row.getAs("simulation")), row -> (row)));
+            .collect(Collectors.toUnmodifiableMap(row -> (row.<Number>getAs("simulation").intValue()), row -> (row)));
 
     assertThat((long) rowsById.get(1).getAs("revenue-at-best")).isEqualTo(840L);
     assertThat((long) rowsById.get(1).getAs("revenue-at-worst")).isEqualTo(840L);
