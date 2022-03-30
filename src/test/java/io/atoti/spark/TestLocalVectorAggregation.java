@@ -38,6 +38,27 @@ public class TestLocalVectorAggregation {
   }
 
   @Test
+  void sumVector() {
+    final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
+    var price_simulations =
+        new SumArray(
+            "price_simulations_bis", "price_simulations", null);
+    var rows =
+        AggregateQuery.aggregate(dataframe, List.of("id"), List.of(), List.of())
+            .collectAsList();
+
+    // result must have 2 values
+    assertThat(rows).hasSize(2);
+
+    final var rowsById =
+        rows.stream().collect(Collectors.toUnmodifiableMap(row -> (row.getAs("id")), row -> (row)));
+
+    assertThat((long) rowsById.get(1).getAs("vector-at")).isEqualTo(3);
+
+    assertThat((long) rowsById.get(2).getAs("vector-at")).isEqualTo(1);
+  }
+
+  @Test
   void testSumArrayLength() {
     final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
     var price_simulations =
