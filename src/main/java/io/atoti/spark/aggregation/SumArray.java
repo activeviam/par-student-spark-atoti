@@ -1,17 +1,17 @@
 package io.atoti.spark.aggregation;
 
-import static io.atoti.spark.Utils.convertScalaArrayToArray;
 import static org.apache.spark.sql.functions.col;
 
+import io.atoti.spark.Utils;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Encoder;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.expressions.Aggregator;
-import scala.collection.compat.immutable.ArraySeq;
+import scala.collection.IndexedSeq;
 
 public final class SumArray implements AggregatedValue, Serializable {
   private static final long serialVersionUID = 8932076027241294986L;
@@ -20,17 +20,17 @@ public final class SumArray implements AggregatedValue, Serializable {
   public String column;
   private Aggregator<Row, long[], long[]> udaf;
 
-  private static long[] sum(long[] a, long[] b) {
-    if (a.length == 0) {
-      return b;
+  private static long[] sum(long[] buffer, IndexedSeq<Long> value) {
+    if (buffer.length == 0) {
+      return Utils.convertScalaArrayToArray(value).stream().mapToLong(Long::longValue).toArray();
     }
-    if (b.length == 0) {
-      return a;
+    if (value.length() == 0) {
+      return buffer;
     }
-    if (a.length != b.length) {
+    if (buffer.length != value.length()) {
       throw new UnsupportedOperationException("Cannot sum arrays of different size");
     }
-    return IntStream.range(0, a.length).mapToLong((int i) -> a[i] + b[i]).toArray();
+    return IntStream.range(0, buffer.length).mapToLong((int i) -> buffer[i] + value.apply$mcII$sp(i)).toArray();
   }
 
   public SumArray(String name, String column, Encoder<long[]> encoder) {
@@ -44,7 +44,7 @@ public final class SumArray implements AggregatedValue, Serializable {
 
           @Override
           public Encoder<long[]> bufferEncoder() {
-            return encoder;
+            return SparkSession.active().implicits().newLongArrayEncoder();
           }
 
           @Override
@@ -59,21 +59,19 @@ public final class SumArray implements AggregatedValue, Serializable {
 
           @Override
           public Encoder<long[]> outputEncoder() {
-            return encoder;
+            return SparkSession.active().implicits().newLongArrayEncoder();
           }
 
           @SuppressWarnings("unchecked")
           @Override
-          public long[] reduce(long[] b, Row a) {
-            ArraySeq<Long> arraySeq;
+          public long[] reduce(long[] result, Row row) {
+            IndexedSeq<Long> arraySeq;
             try {
-              arraySeq = a.getAs(column);
+              arraySeq = row.getAs(column);
             } catch (ClassCastException e) {
-              throw new UnsupportedOperationException("Column did not contains only arrays");
+              throw new UnsupportedOperationException("Column did not contains only arrays", e);
             }
-            List<Long> list = convertScalaArrayToArray(arraySeq);
-            long[] array = list.stream().mapToLong(i -> i).toArray();
-            return b;
+            return sum(result, arraySeq);
           }
 
           @Override
