@@ -8,19 +8,17 @@ import static org.apache.spark.sql.functions.udf;
 import io.atoti.spark.aggregation.AggregatedValue;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
-
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.expressions.UserDefinedFunction;
 import org.apache.spark.sql.types.DataTypes;
-import scala.collection.compat.immutable.ArraySeq;
+import scala.collection.Seq;
 
 public final class Multiply extends Operation {
 
   private static UserDefinedFunction udf =
       udf(
-          (Long x, ArraySeq<Long> s) -> {
+          (Long x, Seq<Long> s) -> {
             ArrayList<Long> list = convertScalaArrayToArray(s);
             return convertToArrayListToScalaArraySeq(
                 list.stream().map((Long value) -> value * x).collect(Collectors.toList()));

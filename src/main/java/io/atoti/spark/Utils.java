@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import scala.collection.IndexedSeq;
 import scala.collection.JavaConverters;
-import scala.collection.immutable.Seq;
+import scala.collection.Seq;
 
 class ArrayElement {
   int index;
@@ -21,12 +20,12 @@ class ArrayElement {
 }
 
 public class Utils {
-  public static <T> ArrayList<T> convertScalaArrayToArray(IndexedSeq<T> arr) {
+  public static <T> ArrayList<T> convertScalaArrayToArray(Seq<T> arr) {
     return new ArrayList<T>(JavaConverters.asJavaCollectionConverter(arr).asJavaCollection());
   }
 
   public static Seq<Long> convertToArrayListToScalaArraySeq(List<Long> arr) {
-    return (Seq<Long>) JavaConverters.asScalaBuffer(arr).iterator().toSeq();
+    return JavaConverters.asScalaBuffer(arr).iterator().toSeq();
   }
 
   public static long t(ArrayElement a, ArrayElement b) {

@@ -18,7 +18,7 @@ public final class Quantile extends Operation {
   static UserDefinedFunction quantileUdf(float percent) {
     return udf(
         (Seq<Long> arr) -> {
-          ArrayList<Long> javaArr = new ArrayList<Long>(JavaConverters.asJavaCollectionConverter(arr).asJavaCollection());
+          ArrayList<Long> javaArr = Utils.convertScalaArrayToArray(arr);
           return Utils.quantile(javaArr, percent);
         },
         DataTypes.LongType);
