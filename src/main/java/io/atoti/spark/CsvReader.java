@@ -6,8 +6,11 @@ import java.util.Objects;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.functions;
+import org.apache.spark.sql.types.DataTypes;
 
 public class CsvReader {
+
   public static Dataset<Row> read(String path, SparkSession session) {
     return CsvReader.read(path, session, ";");
   }
@@ -27,6 +30,20 @@ public class CsvReader {
               .option("timestampFormat", "dd/MM/yyyy")
               .option("inferSchema", true)
               .load(url.toURI().getPath());
+      for (int i = 0; i < dataframe.columns().length; i++) {
+        if (dataframe.dtypes()[i]._2 == DataTypes.StringType.toString()) {
+          String col = dataframe.columns()[i];
+          if (dataframe
+                  .filter(functions.col(col).$eq$eq$eq("").$bar$bar(functions.col(col).rlike(",")))
+                  .count()
+              == dataframe.count()) {
+            // This prototype only supports arrays of integers
+            dataframe =
+                dataframe.withColumn(
+                    col, functions.split(functions.col(col), ",").cast("array<long>"));
+          }
+        }
+      }
     } catch (URISyntaxException e) {
       throw new IllegalArgumentException("Failed to read csv " + path, e);
     }

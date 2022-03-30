@@ -30,6 +30,7 @@ public class Discovery {
                 DataTypes.ShortType,
                 DataTypes.StringType,
                 DataTypes.TimestampType,
+                DataTypes.createArrayType(DataTypes.LongType),
               })
           .collect(Collectors.toMap(DataType::toString, Function.identity()));
 
