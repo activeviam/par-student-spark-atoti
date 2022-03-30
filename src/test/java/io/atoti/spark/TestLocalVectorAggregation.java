@@ -45,10 +45,11 @@ public class TestLocalVectorAggregation {
             "price_simulations_sum", "price_simulations");
     var rows =
         AggregateQuery.aggregate(
-                dataframe, List.of("id"), List.of(price_simulations), List.of())
+                dataframe, List.of(), List.of(price_simulations), List.of())
             .collectAsList();
-
-    // result must have 2 values
     System.out.println(rows);
+    assertThat(rows).hasSize(1)
+        .extracting(row -> row.getLong(0))
+        .containsExactlyInAnyOrder(6L);
   }
 }

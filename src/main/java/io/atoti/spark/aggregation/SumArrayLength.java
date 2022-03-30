@@ -10,6 +10,7 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.expressions.Aggregator;
 import scala.collection.compat.immutable.ArraySeq;
+import scala.collection.mutable.IndexedSeq;
 import scala.collection.mutable.WrappedArray;
 
 public final class SumArrayLength implements AggregatedValue, Serializable {
@@ -50,7 +51,7 @@ public final class SumArrayLength implements AggregatedValue, Serializable {
 
           @Override
           public Long reduce(final Long result, final Row row) {
-            final WrappedArray<Long> arraySeq;
+            final IndexedSeq<Long> arraySeq;
             try {
               arraySeq = row.getAs(column);
             } catch (final ClassCastException e) {
