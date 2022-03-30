@@ -4,6 +4,7 @@ import static org.apache.spark.sql.functions.col;
 
 import io.atoti.spark.Utils;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.IntStream;
 import org.apache.spark.sql.Column;
@@ -18,7 +19,20 @@ public final class SumArray implements AggregatedValue, Serializable {
 
   public String name;
   public String column;
-  private Aggregator<Row, long[], long[]> udaf;
+  private Aggregator<?, ?, ?> udaf;
+
+  private static long[] sum(long[] a, long[] b) {
+    if (a.length == 0) {
+      return b;
+    }
+    if (b.length == 0) {
+      return a;
+    }
+    if (a.length != b.length) {
+      throw new UnsupportedOperationException("Cannot sum arrays of different size");
+    }
+    return IntStream.range(0, a.length).mapToLong((int i) -> a[i] + b[i]).toArray();
+  }
 
   private static long[] sum(long[] buffer, IndexedSeq<Long> value) {
     if (buffer.length == 0) {
@@ -33,7 +47,7 @@ public final class SumArray implements AggregatedValue, Serializable {
     return IntStream.range(0, buffer.length).mapToLong((int i) -> buffer[i] + value.apply$mcII$sp(i)).toArray();
   }
 
-  public SumArray(String name, String column, Encoder<long[]> encoder) {
+  public SumArray(String name, String column) {
     Objects.requireNonNull(name, "No name provided");
     Objects.requireNonNull(column, "No column provided");
     this.name = name;
@@ -54,7 +68,7 @@ public final class SumArray implements AggregatedValue, Serializable {
 
           @Override
           public long[] merge(long[] b1, long[] b2) {
-            return b1;
+            return sum(b1, b2);
           }
 
           @Override
@@ -64,14 +78,17 @@ public final class SumArray implements AggregatedValue, Serializable {
 
           @SuppressWarnings("unchecked")
           @Override
-          public long[] reduce(long[] result, Row row) {
+          public long[] reduce(long[] buffer, Row row) {
             IndexedSeq<Long> arraySeq;
             try {
               arraySeq = row.getAs(column);
             } catch (ClassCastException e) {
               throw new UnsupportedOperationException("Column did not contains only arrays", e);
             }
-            return sum(result, arraySeq);
+            System.err.println("[coucou] received: " + arraySeq);
+            final long[] result = sum(buffer, arraySeq);
+            System.err.println("[coucou] result: " + Arrays.toString(result));
+            return result;
           }
 
           @Override

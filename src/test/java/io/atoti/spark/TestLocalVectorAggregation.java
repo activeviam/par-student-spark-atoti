@@ -8,24 +8,14 @@ package io.atoti.spark;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.atoti.spark.aggregation.Sum;
 import io.atoti.spark.aggregation.SumArray;
 import io.atoti.spark.aggregation.SumArrayLength;
-import io.atoti.spark.operation.Multiply;
-import io.atoti.spark.operation.Quantile;
-import io.atoti.spark.operation.QuantileIndex;
-import io.atoti.spark.operation.VectorAt;
-import io.github.cdimascio.dotenv.Dotenv;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
-import scala.collection.JavaConverters;
-import scala.collection.compat.immutable.ArraySeq;
 
 public class TestLocalVectorAggregation {
 
@@ -42,7 +32,7 @@ public class TestLocalVectorAggregation {
     final Dataset<Row> dataframe = CsvReader.read("csv/array.csv", spark);
     var price_simulations =
         new SumArray(
-            "price_simulations_bis", "price_simulations", null);
+            "price_simulations_bis", "price_simulations");
     var rows =
         AggregateQuery.aggregate(dataframe, List.of("id"), List.of(), List.of())
             .collectAsList();

@@ -1,8 +1,6 @@
 package io.atoti.spark;
 
-import io.atoti.spark.aggregation.Sum;
 import io.atoti.spark.aggregation.SumArray;
-import io.atoti.spark.operation.Multiply;
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,7 +25,7 @@ public class Main {
     spark.sparkContext().addJar("./target/spark-lib-0.0.1-SNAPSHOT.jar");
     final Dataset<Row> dataframe = spark.read().table("array");
     SumArray price_simulations = new SumArray(
-            "price_simulations_sum", "price_simulations", spark.implicits().newLongArrayEncoder()
+            "price_simulations_sum", "price_simulations"
     );
     Quantile quantile = new Quantile("quantile", price_simulations, 95f);
     List<Row> rows = AggregateQuery.aggregate(

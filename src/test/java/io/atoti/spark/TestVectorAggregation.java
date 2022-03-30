@@ -24,7 +24,9 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
+import scala.collection.IndexedSeq;
 import scala.collection.JavaConverters;
+import scala.collection.Seq;
 import scala.collection.compat.immutable.ArraySeq;
 
 public class TestVectorAggregation {
@@ -42,8 +44,8 @@ public class TestVectorAggregation {
     spark.sparkContext().addJar("./target/spark-lib-0.0.1-SNAPSHOT.jar");
   }
 
-  private static ArrayList<Long> convertScalaArrayToArray(ArraySeq<Long> arr) {
-    return new ArrayList<Long>(JavaConverters.asJavaCollectionConverter(arr).asJavaCollection());
+  private static <T> List<T> convertScalaArrayToArray(Seq<T> arr) {
+    return new ArrayList<T>(JavaConverters.asJavaCollectionConverter(arr).asJavaCollection());
   }
 
   @SuppressWarnings("unchecked")
@@ -53,7 +55,7 @@ public class TestVectorAggregation {
     final Dataset<Row> dataframe = spark.read().table("array");
     var price_simulations =
         new SumArray(
-            "price_simulations_sum", "price_simulations", spark.implicits().newLongArrayEncoder());
+            "price_simulations_sum", "price_simulations");
     var quantile = new Quantile("quantile", price_simulations, 95f);
     var rows =
         AggregateQuery.aggregate(
@@ -64,19 +66,21 @@ public class TestVectorAggregation {
     assertThat(rows).hasSize(2);
 
     final var rowsById =
-        rows.stream().collect(Collectors.toUnmodifiableMap(row -> (row.getAs("id")), row -> (row)));
+        rows.stream().collect(Collectors.toUnmodifiableMap(
+            row -> row.<Number>getAs("id").longValue(),
+            row -> (row)));
 
-    assertThat((long) rowsById.get(1).getAs("quantile")).isEqualTo(7L);
-    assertThat((long) rowsById.get(2).getAs("quantile")).isEqualTo(3L);
+    assertThat((long) rowsById.get(1L).getAs("quantile")).isEqualTo(7L);
+    assertThat((long) rowsById.get(2L).getAs("quantile")).isEqualTo(3L);
     for (int i = 0; i < 3; i++) {
       assertThat(
           convertScalaArrayToArray(
-              (ArraySeq<Long>) rowsById.get(1).getAs("price_simulations_sum"))
-              .get(i))
+              rowsById.get(1L).<IndexedSeq<Long>>getAs("price_simulations_sum"))
+                  .get(i))
           .isEqualTo(List.of(3L, 7L, 5L).get(i));
       assertThat(
           convertScalaArrayToArray(
-              (ArraySeq<Long>) rowsById.get(2).getAs("price_simulations_sum"))
+              rowsById.get(2L).<IndexedSeq<Long>>getAs("price_simulations_sum"))
               .get(i))
           .isEqualTo(List.of(1L, 3L, 2L).get(i));
     }
@@ -88,7 +92,7 @@ public class TestVectorAggregation {
     final Dataset<Row> dataframe = spark.read().table("array");
     var price_simulations =
         new SumArray(
-            "price_simulations_bis", "price_simulations", spark.implicits().newLongArrayEncoder());
+            "price_simulations_bis", "price_simulations");
     var vectorAt = new VectorAt("vector-at", price_simulations, 1);
     var rows =
         AggregateQuery.aggregate(dataframe, List.of("id"), List.of(), List.of(vectorAt))
@@ -110,7 +114,7 @@ public class TestVectorAggregation {
   void simpleAggregation() {
     final Dataset<Row> dataframe = spark.read().table("array");
     var sumVector =
-        new SumArray("sum(vector)", "price_simulations", spark.implicits().newLongArrayEncoder());
+        new SumArray("sum(vector)", "price_simulations");
     var rows =
         AggregateQuery.aggregate(dataframe, List.of("id"), List.of(sumVector)).collectAsList();
 
@@ -142,7 +146,7 @@ public class TestVectorAggregation {
             "f * vector",
             new Sum("f", "price"),
             new SumArray(
-                "sum(vector)", "price_simulations", spark.implicits().newLongArrayEncoder()));
+                "sum(vector)", "price_simulations"));
     var rows =
         AggregateQuery.aggregate(dataframe, List.of("id"), List.of(), List.of(f_vector))
             .collectAsList();
@@ -180,8 +184,8 @@ public class TestVectorAggregation {
                             new Sum("f", "factor-field"),
                             new SumArray(
                                 "sum(vector)",
-                                "vector-field",
-                                spark.implicits().newLongArrayEncoder())),
+                                "vector-field"
+                            )),
                         95f)))
             .collectAsList();
 
@@ -207,7 +211,7 @@ public class TestVectorAggregation {
         new Multiply(
             "f * vector",
             new Sum("f", "factor-field"),
-            new SumArray("sum(vector)", "vector-field", spark.implicits().newLongArrayEncoder()));
+            new SumArray("sum(vector)", "vector-field"));
     final List<Row> rows =
         AggregateQuery.aggregate(
                 dataframe,
@@ -290,7 +294,7 @@ public class TestVectorAggregation {
     final Dataset<Row> dataframe = spark.read().table("array");
     var price_simulations =
         new SumArray(
-            "price_simulations_bis", "price_simulations", null);
+            "price_simulations_bis", "price_simulations");
     var rows =
         AggregateQuery.aggregate(dataframe, List.of("id"), List.of(price_simulations), List.of())
             .collectAsList();
