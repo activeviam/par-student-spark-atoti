@@ -1,17 +1,16 @@
 package io.atoti.spark.aggregation;
 
-import static org.apache.spark.sql.functions.col;
-
-import java.io.Serializable;
-import java.util.Objects;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Encoder;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.expressions.Aggregator;
-import scala.collection.compat.immutable.ArraySeq;
 import scala.collection.mutable.IndexedSeq;
-import scala.collection.mutable.WrappedArray;
+
+import java.io.Serializable;
+import java.util.Objects;
+
+import static org.apache.spark.sql.functions.col;
 
 public final class SumArrayLength implements AggregatedValue, Serializable {
   private static final long serialVersionUID = 20220330_0933L;
