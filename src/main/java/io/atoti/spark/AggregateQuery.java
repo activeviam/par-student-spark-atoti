@@ -3,8 +3,11 @@ package io.atoti.spark;
 import io.atoti.spark.aggregation.AggregatedValue;
 import io.atoti.spark.condition.QueryCondition;
 import io.atoti.spark.condition.TrueCondition;
+import io.atoti.spark.operation.Operation;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -29,27 +32,81 @@ public class AggregateQuery {
       List<String> groupByColumns,
       List<AggregatedValue> aggregations,
       QueryCondition condition) {
-    if (aggregations.isEmpty()) {
+    return aggregate(dataframe, groupByColumns, aggregations, Arrays.asList(), condition);
+  }
+
+  public static Dataset<Row> aggregate(
+      Dataset<Row> dataframe,
+      List<String> groupByColumns,
+      List<AggregatedValue> aggregations,
+      List<Operation> operations) {
+    return aggregate(dataframe, groupByColumns, aggregations, operations, TrueCondition.value());
+  }
+
+  public static Dataset<Row> aggregate(
+      Dataset<Row> dataframe,
+      List<String> groupByColumns,
+      List<AggregatedValue> aggregations,
+      List<Operation> operations,
+      QueryCondition condition) {
+    if (aggregations.isEmpty() && operations.isEmpty()) {
       throw new IllegalArgumentException(
-          "#aggregate can only be called with at least one AggregatedValue");
+          "#aggregate can only be called with at least one AggregatedValue or Operation");
     }
 
     final Column[] columns = groupByColumns.stream().map(functions::col).toArray(Column[]::new);
-    final Column[] createdColumns =
+    final Column[] createdAggregatedColumns =
         aggregations.stream().map(AggregatedValue::toColumn).toArray(Column[]::new);
-    final Column[] columnsToSelect = Arrays.copyOf(columns, columns.length + createdColumns.length);
-    System.arraycopy(createdColumns, 0, columnsToSelect, columns.length, createdColumns.length);
+    final Column[] createdOperationColumns =
+        operations.stream().map(Operation::toColumn).toArray(Column[]::new);
+    final Column[] columnsToSelect =
+        Arrays.copyOf(
+            columns,
+            columns.length + createdAggregatedColumns.length + createdOperationColumns.length);
+    System.arraycopy(
+        createdAggregatedColumns,
+        0,
+        columnsToSelect,
+        columns.length,
+        createdAggregatedColumns.length);
+    System.arraycopy(
+        createdOperationColumns,
+        0,
+        columnsToSelect,
+        columns.length + createdAggregatedColumns.length,
+        createdOperationColumns.length);
 
-    final Column firstAggColumn = aggregations.get(0).toAggregateColumn();
-    final Column[] nextAggColumns =
-        aggregations.subList(1, aggregations.size()).stream()
-            .map(AggregatedValue::toAggregateColumn)
-            .toArray(Column[]::new);
-    return dataframe
-        .filter(condition.getCondition())
-        .groupBy(columns)
-        .agg(firstAggColumn, nextAggColumns)
-        .select(columnsToSelect);
+    // Add needed aggregations for operations to the `aggregations` list
+    final List<AggregatedValue> neededAggregations =
+        Stream.concat(
+                operations.stream().flatMap(Operation::getNeededAggregations),
+                aggregations.stream())
+            .distinct()
+            .collect(Collectors.toList());
+
+    // Aggregations
+    if (!neededAggregations.isEmpty()) {
+      final Column firstAggColumn = neededAggregations.get(0).toAggregateColumn();
+      final Column[] nextAggColumns =
+          neededAggregations.subList(1, neededAggregations.size()).stream()
+              .map(AggregatedValue::toAggregateColumn)
+              .toArray(Column[]::new);
+      dataframe =
+          dataframe
+              .filter(condition.getCondition())
+              .groupBy(columns)
+              .agg(firstAggColumn, nextAggColumns);
+    }
+
+    // Operations
+    if (!operations.isEmpty()) {
+      for (Operation op :
+          operations.stream().flatMap(Operation::getAllOperations).distinct().collect(Collectors.toList())) {
+        dataframe = dataframe.withColumn(op.getName(), op.toAggregateColumn());
+      }
+    }
+
+    return dataframe.select(columnsToSelect);
   }
 
   public static Dataset<Row> aggregateSql(

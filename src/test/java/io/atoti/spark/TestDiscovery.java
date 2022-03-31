@@ -112,4 +112,15 @@ public class TestDiscovery {
     assertTrue(dTypes.containsKey("val1_equal_val2"));
     assertThat(dTypes.get("val1_equal_val2")).isEqualTo(DataTypes.BooleanType);
   }
+
+  @Test
+  void testDiscoveryArray() {
+    Dataset<Row> dataframe = spark.read().table("array");
+    final Map<String, DataType> dTypes = Discovery.discoverDataframe(dataframe);
+
+    assertThat(dataframe).isNotNull();
+    assertThat(dTypes).isNotNull();
+    assertThat(dTypes.get("price_simulations"))
+        .isEqualTo(DataTypes.createArrayType(DataTypes.LongType));
+  }
 }

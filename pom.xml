@@ -209,8 +209,9 @@
         <!-- Only use this version for creating the jar with command ./mvnw -P jar-creation clean package clean -->
         <dependency>
           <groupId>org.apache.spark</groupId>
-          <artifactId>spark-sql_2.13</artifactId>
-          <version>3.2.0</version>
+          <artifactId>spark-sql_2.12</artifactId>
+          <version>3.1.2</version>
+          <scope>provided</scope>
         </dependency>
       </dependencies>
       <build>
@@ -227,6 +228,7 @@
                 <include>io/atoti/spark/condition/**/*.java</include>
                 <include>io/atoti/spark/aggregation/**/*.java</include>
                 <include>io/atoti/spark/join/**/*.java</include>
+                <include>io/atoti/spark/operation/**/*.java</include>
                 <include>io/atoti/spark/ListQuery.java</include>
               </includes>
             </configuration>
@@ -257,6 +259,7 @@
               <include>io/atoti/spark/condition/**/*.java</include>
               <include>io/atoti/spark/aggregation/**/*.java</include>
               <include>io/atoti/spark/join/**/*.java</include>
+              <include>io/atoti/spark/operation/**/*.java</include>
               <include>io/atoti/spark/ListQuery.java</include>
             </includes>
             <excludes>
