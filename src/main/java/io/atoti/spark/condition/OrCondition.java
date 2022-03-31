@@ -1,40 +1,36 @@
 package io.atoti.spark.condition;
 
+import static java.util.stream.Collectors.toList;
+
+import java.util.Arrays;
 import java.util.List;
-import org.apache.spark.api.java.function.FilterFunction;
-import org.apache.spark.sql.Row;
+import org.apache.spark.sql.Column;
 
-public record OrCondition(List<QueryCondition> conditions) implements QueryCondition {
+public class OrCondition implements QueryCondition {
+  private List<QueryCondition> conditions;
 
-  public OrCondition {
+  public OrCondition(List<QueryCondition> conditions) {
     if (conditions.isEmpty()) {
       throw new IllegalArgumentException("Cannot accept an empty list of conditions");
     }
+    this.conditions = conditions;
   }
 
   public static OrCondition of(final QueryCondition... conditions) {
-    return new OrCondition(List.of(conditions));
+    return new OrCondition(Arrays.asList(conditions));
   }
 
   @Override
-  public FilterFunction<Row> getCondition() {
-    return (Row row) ->
-        this.conditions.stream()
-            .anyMatch(
-                (condition) -> {
-                  final var filterFunction = condition.getCondition();
-                  try {
-                    return filterFunction.call(row);
-                  } catch (Exception e) {
-                    throw new IllegalStateException("Failed to execute condition " + condition, e);
-                  }
-                });
+  public Column getCondition() {
+    return this.conditions.stream()
+        .map(QueryCondition::getCondition)
+        .reduce(FalseCondition.value().getCondition(), (Column a, Column b) -> a.$bar$bar(b));
   }
 
   @Override
   public String toSqlQuery() {
     return String.join(
         " OR ",
-        this.conditions.stream().map((condition) -> "(" + condition.toSqlQuery() + ")").toList());
+        this.conditions.stream().map((condition) -> "(" + condition.toSqlQuery() + ")").collect(toList()));
   }
 }

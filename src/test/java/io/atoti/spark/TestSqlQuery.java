@@ -11,37 +11,39 @@ import io.atoti.spark.condition.EqualCondition;
 import io.atoti.spark.condition.NotCondition;
 import io.atoti.spark.condition.NullCondition;
 import io.atoti.spark.condition.OrCondition;
+import io.atoti.spark.join.FieldMapping;
+import io.atoti.spark.join.TableJoin;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.spark.sql.Dataset;
+
+import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
 
 class TestSqlQuery {
 
+  static Dotenv dotenv = Dotenv.load();
   static SparkSession spark =
-      SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+      SparkSession.builder()
+              .appName("Spark Atoti")
+              .config("spark.master", "local")
+              .config("spark.databricks.service.clusterId", dotenv.get("clusterId"))
+              .getOrCreate();
 
   public TestSqlQuery() {
     spark.sparkContext().setLogLevel("ERROR");
-
-    registerCsvAsSqlView("csv/basic.csv", "basic");
-    registerCsvAsSqlView("csv/calculate.csv", "calculate");
-    registerCsvAsSqlView("csv/toJoin.csv", "toJoin");
-    registerCsvAsSqlView("csv/twoTypesInSameColumn.csv", "twoTypesInSameColumn");
-  }
-
-  private static void registerCsvAsSqlView(String fileName, String tableName) {
-    final Dataset<Row> dataframe = CsvReader.read(fileName, spark);
-    dataframe.createOrReplaceTempView(tableName);
+    spark.sparkContext().addJar("./target/spark-lib-0.0.1-SNAPSHOT.jar");
   }
 
   @Test
   void testListAllDataFrame() {
-    final List<Row> rows = ListQuery.listSql(spark, "basic", List.of("id", "value"), -1, 0);
+    final List<Row> rows =
+        ListQuery.listSql(spark, new Table("basic"), List.of("id", "value"), -1, 0);
     assertThat(rows).hasSize(3);
     final var valuesById =
         rows.stream()
@@ -54,7 +56,7 @@ class TestSqlQuery {
 
   @Test
   void testListLastRow() {
-    final var rows = ListQuery.listSql(spark, "basic", List.of("id", "value"), 1, 2);
+    final var rows = ListQuery.listSql(spark, new Table("basic"), List.of("id", "value"), 1, 2);
     assertThat(rows).hasSize(1);
     final var valuesById =
         rows.stream()
@@ -70,12 +72,44 @@ class TestSqlQuery {
     final var rows =
         ListQuery.listSql(
             spark,
-            "basic",
+            new Table("basic"),
             AndCondition.of(
                 new EqualCondition("label", "a"),
                 new NotCondition(
                     OrCondition.of(new EqualCondition("id", 1), new NullCondition("value")))));
     assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(2);
+  }
+
+  @Test
+  void testListWithJoinedTable() {
+    Set<FieldMapping> fieldMappings = new HashSet<FieldMapping>();
+    fieldMappings.add(new FieldMapping("id", "basic_id"));
+    TableJoin tableJoin = new TableJoin(new Table("basic"), "toJoin", fieldMappings);
+    final var rows =
+        ListQuery.listSql(
+            spark,
+            tableJoin,
+            AndCondition.of(
+                new EqualCondition("label", "a"),
+                new NotCondition(
+                    OrCondition.of(
+                        new EqualCondition("id", 3), new EqualCondition("join_value", 33)))));
+    assertThat(rows).hasSize(1).extracting(rowReader("id")).first().isEqualTo(1);
+  }
+
+  @Test
+  void testListWithSeveralJoinedTables() {
+    Set<FieldMapping> fieldMappings = new HashSet<FieldMapping>();
+    fieldMappings.add(new FieldMapping("basic.id", "toJoin.basic_id"));
+    TableJoin intermediateJoin = new TableJoin(new Table("basic"), "toJoin", fieldMappings);
+
+    Set<FieldMapping> fieldMappings2 = new HashSet<FieldMapping>();
+    fieldMappings2.add(new FieldMapping("toJoin.basic_id", "calculate.id"));
+    TableJoin tableJoin = new TableJoin(intermediateJoin, "calculate", fieldMappings2);
+
+    final var rows = ListQuery.listSql(spark, tableJoin, new EqualCondition("label", "b"));
+    assertThat(rows).hasSize(1).extracting(rowReader("join_value")).first().isEqualTo(0.0);
+    assertThat(rows).extracting(rowReader("val2")).first().isEqualTo(3.14);
   }
 
   @Test

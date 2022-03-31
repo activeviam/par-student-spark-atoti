@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.activeviam.students</groupId>
-	<artifactId>spark-atoti</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>Spark + Atoti student project</name>
+  <groupId>com.activeviam.students</groupId>
+  <artifactId>spark-atoti</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>Spark + Atoti student project</name>
 
   <properties>
     <java.version>16</java.version>
     <junit.version>5.8.1</junit.version>
+    <jmh.version>1.3.3</jmh.version>
+    <maven.compiler.source>16</maven.compiler.source>
+    <maven.compiler.target>16</maven.compiler.target>
   </properties>
 
   <dependencies>
@@ -27,9 +30,25 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId> org.openjdk.jmh</groupId>
+      <groupId>org.openjdk.jmh</groupId>
       <artifactId>jmh-generator-annprocess</artifactId>
-      <version>1.3.3</version>
+      <version>${jmh.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.github.cdimascio</groupId>
+      <artifactId>java-dotenv</artifactId>
+      <version>5.2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20210307</version>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+      <version>4.9.3</version>
     </dependency>
   </dependencies>
 
@@ -41,18 +60,33 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.8.1</version>
           <configuration>
-            <source>${java.version}</source>
-            <target>${java.version}</target>
-            <release>${java.version}</release>
             <encoding>UTF-8</encoding>
             <!-- Add source files specific to the Java version -->
             <compileSourceRoots>
               <compileSourceRoot>${project.basedir}/src/main/java</compileSourceRoot>
             </compileSourceRoots>
-            <compilerArgs>
-              <arg>--enable-preview</arg>
-            </compilerArgs>
           </configuration>
+          <executions>
+            <execution>
+              <!-- For tests, use the latest version of the JDK, compatible with any version -->
+              <id>test-compile</id>
+              <configuration>
+                <source>${java.version}</source>
+                <target>${java.version}</target>
+                <release>${java.version}</release>
+                <compilerArgs>
+                  <arg>--enable-preview</arg>
+                </compilerArgs>
+                <annotationProcessorPaths>
+                  <path>
+                    <groupId>org.openjdk.jmh</groupId>
+                    <artifactId>jmh-generator-annprocess</artifactId>
+                    <version>${jmh.version}</version>
+                  </path>
+                </annotationProcessorPaths>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>com.coveo</groupId>
@@ -72,15 +106,15 @@
         </configuration>
       </plugin>
 
-			<plugin>
-				<artifactId>maven-install-plugin</artifactId>
-				<version>2.4</version>
-				<!-- Do not contribute the resulting jar to maven repository, as no one 
-					will use it -->
-				<configuration>
-					<skip>true</skip>
-				</configuration>
-			</plugin>
+      <plugin>
+        <artifactId>maven-install-plugin</artifactId>
+        <version>2.4</version>
+        <!-- Do not contribute the resulting jar to maven repository, as no one
+          will use it -->
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -99,5 +133,142 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>standalone</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <source>${java.version}</source>
+              <target>${java.version}</target>
+              <release>${java.version}</release>
+              <compilerArgs>
+                <arg>--enable-preview</arg>
+              </compilerArgs>
+            </configuration>
+            <executions>
+              <execution>
+                <id>test-compile</id>
+                <configuration>
+                  <annotationProcessorPaths>
+                    <path>
+                      <groupId>org.openjdk.jmh</groupId>
+                      <artifactId>jmh-generator-annprocess</artifactId>
+                      <version>${jmh.version}</version>
+                    </path>
+                  </annotationProcessorPaths>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>databricks</id>
+      <!-- No dependency needed as one shall manually add databricks-connect dependencies
+      to its project. See https://docs.databricks.com/dev-tools/databricks-connect.html#set-up-your-ide-or-notebook-server-->
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <source>${java.version}</source>
+              <target>${java.version}</target>
+              <release>${java.version}</release>
+              <compilerArgs>
+                <arg>--enable-preview</arg>
+              </compilerArgs>
+            </configuration>
+            <executions>
+              <execution>
+                <id>test-compile</id>
+                <configuration>
+                  <annotationProcessorPaths>
+                    <path>
+                      <groupId>org.openjdk.jmh</groupId>
+                      <artifactId>jmh-generator-annprocess</artifactId>
+                      <version>${jmh.version}</version>
+                    </path>
+                  </annotationProcessorPaths>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>jar-creation</id>
+      <dependencies>
+        <!-- Only use this version for creating the jar with command ./mvnw -P jar-creation clean package clean -->
+        <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-sql_2.12</artifactId>
+          <version>3.1.2</version>
+          <scope>provided</scope>
+        </dependency>
+      </dependencies>
+      <build>
+        <finalName>spark-lib-${project.version}</finalName>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <source>${java.version}</source>
+              <target>1.8</target>
+              <release>8</release>
+              <includes>
+                <include>io/atoti/spark/condition/**/*.java</include>
+                <include>io/atoti/spark/aggregation/**/*.java</include>
+                <include>io/atoti/spark/join/**/*.java</include>
+                <include>io/atoti/spark/operation/**/*.java</include>
+                <include>io/atoti/spark/ListQuery.java</include>
+              </includes>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-clean-plugin</artifactId>
+            <version>3.1.0</version>
+            <configuration>
+              <excludeDefaultDirectories>true</excludeDefaultDirectories>
+              <filesets>
+                <fileset>
+                  <directory>target</directory>
+                  <includes>
+                    <include>**</include>
+                  </includes>
+                  <excludes>
+                    <exclude>*.jar</exclude>
+                  </excludes>
+                </fileset>
+              </filesets>
+            </configuration>
+          </plugin>
+        </plugins>
+        <resources>
+          <resource>
+            <directory>src/main</directory>
+            <includes>
+              <include>io/atoti/spark/condition/**/*.java</include>
+              <include>io/atoti/spark/aggregation/**/*.java</include>
+              <include>io/atoti/spark/join/**/*.java</include>
+              <include>io/atoti/spark/operation/**/*.java</include>
+              <include>io/atoti/spark/ListQuery.java</include>
+            </includes>
+            <excludes>
+              <exclude>resources</exclude>
+            </excludes>
+          </resource>
+        </resources>
+      </build>
+    </profile>
+  </profiles>
 
 </project>

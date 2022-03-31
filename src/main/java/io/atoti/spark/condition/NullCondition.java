@@ -1,13 +1,18 @@
 package io.atoti.spark.condition;
 
-import org.apache.spark.api.java.function.FilterFunction;
-import org.apache.spark.sql.Row;
+import org.apache.spark.sql.Column;
+import org.apache.spark.sql.functions;
 
-public record NullCondition(String fieldName) implements QueryCondition {
+public class NullCondition implements QueryCondition {
+  String fieldName;
+
+  public NullCondition(String fieldName) {
+    this.fieldName = fieldName;
+  }
 
   @Override
-  public FilterFunction<Row> getCondition() {
-    return (Row row) -> (row.isNullAt(row.fieldIndex(fieldName)));
+  public Column getCondition() {
+    return functions.col(fieldName).isNull();
   }
 
   @Override

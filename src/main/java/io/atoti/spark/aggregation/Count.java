@@ -28,9 +28,12 @@ import org.apache.spark.sql.Column;
  * | a2 |   1   |
  * </pre>
  */
-public record Count(String name) implements AggregatedValue {
-  public Count {
+public class Count implements AggregatedValue {
+  String name;
+
+  public Count(String name) {
     Objects.requireNonNull(name, "No name provided");
+    this.name = name;
   }
 
   public Column toAggregateColumn() {

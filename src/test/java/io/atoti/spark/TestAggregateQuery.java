@@ -14,6 +14,8 @@ import io.atoti.spark.condition.TrueCondition;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -21,12 +23,22 @@ import org.junit.jupiter.api.Test;
 
 class TestAggregateQuery {
 
-  SparkSession spark =
-      SparkSession.builder().appName("Spark Atoti").config("spark.master", "local").getOrCreate();
+  static Dotenv dotenv = Dotenv.load();
+  static SparkSession spark =
+          SparkSession.builder()
+                  .appName("Spark Atoti")
+                  .config("spark.master", "local")
+                  .config("spark.databricks.service.clusterId", dotenv.get("clusterId"))
+                  .getOrCreate();
+
+  public TestAggregateQuery() {
+    spark.sparkContext().setLogLevel("ERROR");
+    spark.sparkContext().addJar("./target/spark-lib-0.0.1-SNAPSHOT.jar");
+  }
 
   @Test
   void testBasicAggregation() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows =
         AggregateQuery.aggregate(
                 dataframe,
@@ -61,7 +73,7 @@ class TestAggregateQuery {
 
   @Test
   void testWithEmptyGroupBy() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows =
         AggregateQuery.aggregate(
                 dataframe,
@@ -80,7 +92,7 @@ class TestAggregateQuery {
 
   @Test
   void testListWithCondition() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     final var rows =
         AggregateQuery.aggregate(
                 dataframe, List.of("id"), List.of(new Count("c")), new EqualCondition("label", "a"))
@@ -103,7 +115,7 @@ class TestAggregateQuery {
 
   @Test
   void testWithEmptyAggregationsList() {
-    final Dataset<Row> dataframe = CsvReader.read("csv/basic.csv", spark);
+    final Dataset<Row> dataframe = spark.read().table("basic");
     assertThatThrownBy(
             () ->
                 AggregateQuery.aggregate(
