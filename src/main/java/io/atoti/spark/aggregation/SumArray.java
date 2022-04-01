@@ -4,7 +4,6 @@ import static org.apache.spark.sql.functions.col;
 
 import io.atoti.spark.Utils;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.IntStream;
 import org.apache.spark.sql.Column;
@@ -44,7 +43,7 @@ public final class SumArray implements AggregatedValue, Serializable {
     if (buffer.length != value.length()) {
       throw new UnsupportedOperationException("Cannot sum arrays of different size");
     }
-    return IntStream.range(0, buffer.length).mapToLong((int i) -> buffer[i] + value.apply$mcII$sp(i)).toArray();
+    return IntStream.range(0, buffer.length).mapToLong((int i) -> buffer[i] + value.apply$mcJI$sp(i)).toArray();
   }
 
   public SumArray(String name, String column) {
@@ -85,9 +84,7 @@ public final class SumArray implements AggregatedValue, Serializable {
             } catch (ClassCastException e) {
               throw new UnsupportedOperationException("Column did not contains only arrays", e);
             }
-            System.err.println("[coucou] received: " + arraySeq);
             final long[] result = sum(buffer, arraySeq);
-            System.err.println("[coucou] result: " + Arrays.toString(result));
             return result;
           }
 

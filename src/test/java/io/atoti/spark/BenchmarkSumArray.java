@@ -38,8 +38,8 @@ public class BenchmarkSumArray {
             .getOrCreate();
     spark.sparkContext().addJar("./target/spark-lib-0.0.1-SNAPSHOT.jar");
     spark.sparkContext().setLogLevel("ERROR");
-    dataframe = spark.read().table("us_accidents_150m");
-    tableName = "us_accidents_105m";
+    dataframe = spark.read().table("table_vector_100");
+    tableName = "table_vector_100";
   }
 
   @Benchmark
@@ -59,7 +59,7 @@ public class BenchmarkSumArray {
   @Warmup(iterations = 3)
   @Measurement(iterations = 10)
   public void benchmarkSparkSqlSumArray(Blackhole bh) {
-    final Dataset<Row> rows = spark.sql("SELECT category, collect_list(sum) FROM (SELECT category, sum(col) as sum FROM (SELECT category, posexplode(price_simulations) FROM vector_table_100) GROUP BY category, pos ORDER BY pos) GROUP BY category;");
+    final Dataset<Row> rows = spark.sql("SELECT category, collect_list(sum) FROM (SELECT category, sum(col) as sum FROM (SELECT category, posexplode(price_simulations) FROM table_vector_100) GROUP BY category, pos ORDER BY pos) GROUP BY category;");
     rows.show(); // mandatory to trigger the computation of the dataset
     bh.consume(rows);
   }
